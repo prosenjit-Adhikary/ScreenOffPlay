@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing tag to build and publish (for example v1.0.0)
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -12,10 +18,26 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Select release tag and checkout tagged source
+        env:
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+          PUSH_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          if [ -n "$INPUT_RELEASE_TAG" ]; then
+            RELEASE_TAG="$INPUT_RELEASE_TAG"
+          else
+            RELEASE_TAG="${PUSH_REF#refs/tags/}"
+          fi
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "::error::Invalid release tag format"
+            exit 1
+          fi
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
       - name: Checkout tagged source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.release_tag || github.ref }}
       - name: Require release signing secrets
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -26,7 +48,7 @@ jobs:
           set -euo pipefail
           for name in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [ -z "${!name}" ]; then
-              echo "::error::Missing required GitHub Actions secret for Android release signing: $name"
+              echo "::error::Missing required GitHub Actions secret: $name"
               exit 1
             fi
           done
@@ -45,13 +67,26 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.2'
-      - name: Decode maintainer keystore
+      - name: Decode and validate maintainer keystore
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           set -euo pipefail
-          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/screenoffplay-release.jks"
-          test -s "$RUNNER_TEMP/screenoffplay-release.jks"
+          python3 - <<'PY'
+          import base64, os, pathlib
+          raw = "".join(os.environ["KEYSTORE_B64"].split())
+          try:
+              data = base64.b64decode(raw, validate=True)
+          except Exception:
+              raise SystemExit("::error::ANDROID_KEYSTORE_BASE64 is not valid complete Base64. Replace it with the full Base64 encoding of the original JKS file.")
+          if not data:
+              raise SystemExit("::error::Decoded keystore is empty.")
+          pathlib.Path(os.environ["RUNNER_TEMP"], "screenoffplay-release.jks").write_bytes(data)
+          PY
+          keytool -list -keystore "$RUNNER_TEMP/screenoffplay-release.jks" \
+            -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
       - name: Build signed release APK
         env:
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/screenoffplay-release.jks
@@ -66,14 +101,18 @@ jobs:
           test -s "$APK"
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose --print-certs "$APK"
           sha256sum "$APK" > app-release.apk.sha256
-      - name: Publish GitHub Release
+      - name: Upload assets to existing release or create release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "$GITHUB_REF_NAME" \
-            app/build/outputs/apk/release/app-release.apk \
-            app-release.apk.sha256 \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "ScreenOffPlay $GITHUB_REF_NAME" \
-            --generate-notes
+          APK="app/build/outputs/apk/release/app-release.apk"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$APK" app-release.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$APK" app-release.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "ScreenOffPlay $RELEASE_TAG" \
+              --generate-notes
+          fi
