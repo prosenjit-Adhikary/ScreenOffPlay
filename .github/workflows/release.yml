@@ -8,8 +8,8 @@ on:
     inputs:
       release_tag:
         description: Existing tag to build and publish (for example v1.0.0)
-        required: false
-        default: v1.0.0
+        required: true
+        default: v1.1.0
         type: string
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Select release tag and checkout tagged source
         env:
-          INPUT_RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.0' }}
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
           PUSH_REF: ${{ github.ref }}
         run: |
           set -euo pipefail
@@ -38,7 +38,7 @@ jobs:
       - name: Checkout tagged source
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.release_tag || (github.event_name == 'workflow_dispatch' && 'v1.0.0') || github.ref }}
+          ref: ${{ inputs.release_tag || github.ref }}
       - name: Require release signing secrets
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
