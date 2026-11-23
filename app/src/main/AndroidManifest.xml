@@ -5,6 +5,8 @@
 
     <application
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:label="Screen Off Play"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
@@ -20,7 +22,7 @@
         <service
             android:name=".BlackoutTileService"
             android:exported="true"
-            android:icon="@android:drawable/ic_lock_power_off"
+            android:icon="@drawable/ic_launcher_monochrome"
             android:label="Screen Off"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
