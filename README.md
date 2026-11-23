@@ -44,4 +44,4 @@ Release builds enable R8 code shrinking and resource shrinking. Release APKs mus
 
 ## Public release status
 
-See [RELEASE-READINESS.md](RELEASE-READINESS.md) for the supported Android API range, device compatibility expectations, privacy/permission audit points, release-signing requirements, and the checklist required before a stable public release. Successful CI builds include an unsigned release APK for validation; it is not the signed public install package. The project is distributed under the [MIT License](LICENSE).
+See [RELEASE-READINESS.md](RELEASE-READINESS.md) for the supported Android API range, device compatibility expectations, privacy/permission audit points, release-signing requirements, and the checklist required before a stable public release. CI runs Android lint, unit-test tasks, and debug/unsigned-release builds. Signed tag-based publishing is configured in `.github/workflows/release.yml`; it requires the maintainer's protected signing secrets and a pushed version tag. The unsigned CI APK is for validation only, not the signed public install package. The project is distributed under the [MIT License](LICENSE).
