@@ -31,9 +31,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.2'
+      - name: Run Android lint
+        run: gradle lint
+      - name: Run unit tests
+        run: gradle test
       - name: Build debug APK
         run: gradle assembleDebug
-      - name: Build release APK (unsigned)
+      - name: Build release APK (unsigned validation build)
         run: gradle assembleRelease
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
