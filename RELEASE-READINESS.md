@@ -36,6 +36,23 @@ Public users must receive a signed APK. The maintainer should create and securel
 
 Unsigned APKs are for build validation only and must not be advertised as the public installable release.
 
+## Automated release signing workflow
+
+The repository now includes `.github/workflows/release.yml`. Pushing a version tag matching `v*` starts a clean release build, runs lint and unit-test tasks, signs the APK, verifies the signature, computes SHA-256, and publishes a GitHub Release.
+
+Before creating a version tag, the maintainer must configure these four repository Actions secrets under Settings → Secrets and variables → Actions:
+
+- `ANDROID_KEYSTORE_BASE64`: Base64-encoded contents of the long-term release keystore.
+- `ANDROID_STORE_PASSWORD`: keystore password.
+- `ANDROID_KEY_ALIAS`: release key alias.
+- `ANDROID_KEY_PASSWORD`: release key password.
+
+The signing keystore must be generated and backed up securely by the maintainer. Never paste the keystore, passwords, or private key into chat, source control, workflow logs, or issue comments. Do not rotate the key between releases if users are expected to install updates over the existing app.
+
+After configuring and independently checking those secrets, push a version tag such as `v1.0.0`. The tag workflow is deliberately not run against ordinary branch commits. A failed signing or verification step blocks publication.
+
+The current unsigned CI artifact is not a public release. This workflow has been added but cannot produce a signed release until the maintainer configures the secrets and pushes a version tag.
+
 ## Permissions and privacy
 
 The manifest currently declares `SYSTEM_ALERT_WINDOW`, which the user grants manually in Android Settings. The Quick Settings service is protected by Android's `BIND_QUICK_SETTINGS_TILE` permission. The current manifest does not declare Internet, storage, audio, notification, accessibility, device-admin, or battery-optimization permissions.
