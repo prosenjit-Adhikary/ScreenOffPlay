@@ -44,4 +44,4 @@ Release builds enable R8 code shrinking and resource shrinking. Release APKs mus
 
 ## Public release status
 
-See [RELEASE-READINESS.md](RELEASE-READINESS.md) for the supported Android API range, device compatibility expectations, privacy/permission audit points, release-signing requirements, and the checklist required before a stable public release. Successful CI builds include an unsigned release APK for validation; it is not the signed public install package. This repository currently has no license file, so do not redistribute or describe the project as open source until the maintainer adds a license.
+See [RELEASE-READINESS.md](RELEASE-READINESS.md) for the supported Android API range, device compatibility expectations, privacy/permission audit points, release-signing requirements, and the checklist required before a stable public release. Successful CI builds include an unsigned release APK for validation; it is not the signed public install package. The project is distributed under the [MIT License](LICENSE).
