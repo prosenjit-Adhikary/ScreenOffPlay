@@ -100,7 +100,7 @@ public final class OverlayController {
                     );
                 }
             }
-        } catch (WindowManager.BadTokenException | IllegalStateException ignored) {
+        } catch (WindowManager.BadTokenException | IllegalStateException | SecurityException ignored) {
             overlayView = null;
         }
     }
