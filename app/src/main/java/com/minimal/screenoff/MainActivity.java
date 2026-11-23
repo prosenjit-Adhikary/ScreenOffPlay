@@ -29,13 +29,14 @@ public class MainActivity extends Activity {
 
         TextView info = new TextView(this);
         info.setText(
-                "Blackout mode keeps the display awake at very low brightness with a black overlay, " +
-                "so the current app can remain in the foreground.\n\n" +
+                "AMOLED Blackout uses a pure black (#000000) overlay and minimum window brightness. " +
+                "It does not hold the display awake, so Android's normal screen timeout can turn the panel off.\n\n" +
                 "1. Allow Display over other apps.\n" +
                 "2. Add the Screen Off tile to Quick Settings.\n" +
-                "3. Start a video, then tap the tile.\n" +
-                "4. Double-tap the black screen to restore it.\n\n" +
-                "This does not physically power off the display or guarantee YouTube background playback."
+                "3. Start your video/audio, then tap the tile.\n" +
+                "4. Leave the phone untouched; normal screen timeout will switch the display off.\n" +
+                "5. Wake the phone and double-tap the black screen to restore it.\n\n" +
+                "Battery savings depend on your display and timeout settings. Audio playback depends on the media app; this app cannot guarantee background playback."
         );
         info.setTextSize(15f);
         info.setGravity(Gravity.CENTER);
@@ -43,7 +44,7 @@ public class MainActivity extends Activity {
         layout.addView(info);
 
         Button btn = new Button(this);
-        btn.setText("Allow overlay / Start blackout");
+        btn.setText("Allow overlay permission");
         btn.setOnClickListener(v -> {
             if (!Settings.canDrawOverlays(this)) {
                 Intent intent = new Intent(
@@ -52,8 +53,9 @@ public class MainActivity extends Activity {
                 );
                 startActivity(intent);
             } else {
-                OverlayController.show(this);
-                Toast.makeText(this, "Double-tap to restore the screen", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "Add the Screen Off tile to Quick Settings, then use it over your media app.",
+                        Toast.LENGTH_LONG).show();
             }
         });
         layout.addView(btn);
