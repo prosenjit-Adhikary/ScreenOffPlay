@@ -56,4 +56,4 @@ For each tested device, record: manufacturer/model, Android version, security pa
 
 ## Open-source licensing
 
-A public GitHub repository is not automatically an open-source-licensed project. Before advertising ScreenOffPlay as open source, the maintainer must choose and add a license. Until then, reuse and redistribution rights are not granted by the repository's public visibility alone.
+ScreenOffPlay is distributed under the MIT License; see [LICENSE](LICENSE). Reusers must retain the copyright and permission notice as required by that license.
