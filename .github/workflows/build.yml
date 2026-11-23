@@ -39,6 +39,24 @@ jobs:
         run: gradle assembleDebug
       - name: Build release APK (unsigned validation build)
         run: gradle assembleRelease
+      - name: Smoke-test release signing with an ephemeral CI-only key
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/ci-test-release.jks
+          ANDROID_STORE_PASSWORD: ci-only-store-password
+          ANDROID_KEY_ALIAS: ci-test
+          ANDROID_KEY_PASSWORD: ci-only-key-password
+        run: |
+          set -euo pipefail
+          keytool -genkeypair -v \
+            -keystore "$ANDROID_KEYSTORE_PATH" \
+            -storepass "$ANDROID_STORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" \
+            -keypass "$ANDROID_KEY_PASSWORD" \
+            -dname "CN=ScreenOffPlay CI Signing Test" \
+            -keyalg RSA -keysize 2048 -validity 2
+          gradle clean assembleRelease
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose \
+            app/build/outputs/apk/release/app-release.apk
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
