@@ -16,7 +16,6 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 public final class OverlayController {
-
     private static View overlayView;
     private static long lastTapTime = 0L;
 
@@ -31,20 +30,19 @@ public final class OverlayController {
     }
 
     public static synchronized void show(Context context) {
-        if (overlayView != null) return;
-        Context appCtx = context.getApplicationContext();
-        if (!Settings.canDrawOverlays(appCtx)) return;
+        if (overlayView != null || !Settings.canDrawOverlays(context)) return;
 
-        WindowManager wm = (WindowManager) appCtx.getSystemService(Context.WINDOW_SERVICE);
-        if (wm == null) return;
+        Context appContext = context.getApplicationContext();
+        WindowManager windowManager =
+                (WindowManager) appContext.getSystemService(Context.WINDOW_SERVICE);
+        if (windowManager == null) return;
 
-        FrameLayout root = new FrameLayout(appCtx);
+        FrameLayout root = new FrameLayout(appContext);
         root.setBackgroundColor(Color.BLACK);
-        root.setKeepScreenOn(true);
 
-        TextView hint = new TextView(appCtx);
-        hint.setText("Double-tap anywhere to unlock");
-        hint.setTextColor(0xFF444444);
+        TextView hint = new TextView(appContext);
+        hint.setText("Double-tap anywhere to restore");
+        hint.setTextColor(0xFF555555);
         hint.setTextSize(14f);
         FrameLayout.LayoutParams textParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -52,13 +50,13 @@ public final class OverlayController {
                 Gravity.CENTER
         );
         root.addView(hint, textParams);
-        hint.animate().alpha(0f).setStartDelay(1500).setDuration(500).start();
+        hint.animate().alpha(0f).setStartDelay(1800).setDuration(500).start();
 
-        root.setOnTouchListener((v, event) -> {
+        root.setOnTouchListener((view, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 long now = SystemClock.elapsedRealtime();
-                if (now - lastTapTime < 400L) {
-                    hide(appCtx);
+                if (now - lastTapTime <= 400L) {
+                    hide(appContext);
                 } else {
                     lastTapTime = now;
                     hint.animate().cancel();
@@ -72,7 +70,6 @@ public final class OverlayController {
         int flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                 | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
-
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -85,36 +82,47 @@ public final class OverlayController {
             params.layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
-
         params.screenBrightness = 0.01f;
 
-        wm.addView(root, params);
-        overlayView = root;
+        try {
+            windowManager.addView(root, params);
+            overlayView = root;
+            lastTapTime = 0L;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowInsetsController insetsController = root.getWindowInsetsController();
-            if (insetsController != null) {
-                insetsController.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                insetsController.setSystemBarsBehavior(
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                );
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowInsetsController controller = root.getWindowInsetsController();
+                if (controller != null) {
+                    controller.hide(WindowInsets.Type.statusBars()
+                            | WindowInsets.Type.navigationBars());
+                    controller.setSystemBarsBehavior(
+                            WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    );
+                }
             }
+        } catch (WindowManager.BadTokenException | IllegalStateException ignored) {
+            overlayView = null;
         }
     }
 
     public static synchronized void hide(Context context) {
-        if (overlayView == null) return;
-        WindowManager wm = (WindowManager) context.getApplicationContext()
-                .getSystemService(Context.WINDOW_SERVICE);
-        if (wm != null) {
-            try {
-                wm.removeViewImmediate(overlayView);
-            } catch (Exception ignored) {}
-        }
+        View current = overlayView;
+        if (current == null) return;
+
         overlayView = null;
+        lastTapTime = 0L;
+        WindowManager windowManager =
+                (WindowManager) context.getApplicationContext()
+                        .getSystemService(Context.WINDOW_SERVICE);
+        if (windowManager != null) {
+            try {
+                windowManager.removeViewImmediate(current);
+            } catch (IllegalArgumentException | IllegalStateException ignored) {
+                // The window may already have been removed by the system.
+            }
+        }
     }
 
-    public static boolean isShowing() {
+    public static synchronized boolean isShowing() {
         return overlayView != null;
     }
 }
