@@ -39,6 +39,18 @@ jobs:
         run: gradle assembleDebug
       - name: Build release APK (unsigned validation build)
         run: gradle assembleRelease
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScreenOffPlay-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Upload unsigned release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScreenOffPlay-release-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
       - name: Smoke-test release signing with an ephemeral CI-only key
         env:
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/ci-test-release.jks
@@ -57,15 +69,3 @@ jobs:
           gradle clean assembleRelease
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose \
             app/build/outputs/apk/release/app-release.apk
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ScreenOffPlay-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-      - name: Upload unsigned release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ScreenOffPlay-release-unsigned
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
-          if-no-files-found: error
