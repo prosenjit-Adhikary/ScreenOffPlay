@@ -41,7 +41,7 @@ public final class OverlayController {
         root.setBackgroundColor(Color.BLACK);
 
         TextView hint = new TextView(appContext);
-        hint.setText("Double-tap anywhere to restore");
+        hint.setText("Double-tap to restore");
         hint.setTextColor(0xFF555555);
         hint.setTextSize(14f);
         FrameLayout.LayoutParams textParams = new FrameLayout.LayoutParams(
@@ -67,9 +67,10 @@ public final class OverlayController {
             return true;
         });
 
+        // Do not keep the panel awake: let Android's normal screen timeout
+        // turn the display off after the AMOLED pixels have been blacked out.
         int flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
+                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -82,7 +83,7 @@ public final class OverlayController {
             params.layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
-        params.screenBrightness = 0.01f;
+        params.screenBrightness = 0.0f;
 
         try {
             windowManager.addView(root, params);
