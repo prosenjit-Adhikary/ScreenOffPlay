@@ -36,7 +36,7 @@ On API 26–27, Screen Off / Lock is disabled and Black Screen is the only avail
 - [x] Update README and CHANGELOG with the install-first/permission-later flow.
 - [x] Source-level manifest audit: only SYSTEM_ALERT_WINDOW is declared as a uses-permission; service binding protections are declared on their respective services.
 - [x] Exact-head GitHub Actions verification: Android Build run #49 passed on commit 6ded987a747bb0bbce55866ce964e83080aa76f3. Android lint, unit tests, debug APK, unsigned release APK, artifact uploads, and ephemeral-key release-signing smoke test all completed successfully.
-- [ ] Inspect the merged manifest and APK permission list from the downloaded exact-head build artifact.
+- [x] Inspect the merged manifest and APK permission list in the CI debug APK from run #49 (source commit 6ded987a747bb0bbce55866ce964e83080aa76f3): API 26 / target 34, only one uses-permission entry (SYSTEM_ALERT_WINDOW), and no WAKE_LOCK, Internet, storage, audio, notification, or device-admin permission. Service binding protections are attached to the corresponding services.
 - [ ] Verify clean install has no permission dialog and first launch displays mode selection on physical devices.
 - [ ] Verify Black Screen asks for overlay special access only after Continue, and resumes correctly after granting/denying it.
 - [ ] Verify Screen Off / Lock opens Accessibility settings only after Continue, requires explicit user enablement, and handles returning to the app.
@@ -69,7 +69,7 @@ The accessibility service sets `canRetrieveWindowContent=false` and does not ins
 ## Before calling a build a public stable release
 
 - [x] Latest PR-head CI passes Android lint, unit tests, debug APK, and unsigned release validation APK (run #49, exact head recorded above).
-- [ ] Inspect the merged manifest and APK permission list; confirm no unexpected permission was introduced.
+- [x] Inspect the merged manifest and APK permission list; confirm no unexpected permission was introduced (run #49 debug APK).
 - [ ] Verify clean install, first-launch mode selection, and deferred permission onboarding on physical devices.
 - [ ] Verify both selectable modes and Quick Settings behavior on physical devices.
 - [ ] Verify saved selection survives app restart and can be changed repeatedly.
