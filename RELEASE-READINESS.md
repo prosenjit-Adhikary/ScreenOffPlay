@@ -38,13 +38,15 @@ On API 26–27, Screen Off / Lock is disabled and Black Screen is the only avail
 - [x] Exact-head GitHub Actions verification: Android Build run #54 passed on commit `cd842abf7239a0f278114e79257ff9a82c2a777e` after the AccessibilityService hardening. Android lint, Gradle test task, debug APK, unsigned release APK, artifact uploads, and ephemeral-key release-signing smoke test all completed successfully. The repository currently has no app-specific test source files, so the successful `gradle test` task is not evidence of physical-device behavior or broad automated functional coverage.
 - [x] Inspect the merged manifests in both run #54 APK artifacts (source commit `cd842abf7239a0f278114e79257ff9a82c2a777e`): API 26 / target 34; the only `<uses-permission>` is `SYSTEM_ALERT_WINDOW`; no WAKE_LOCK, Internet, storage, audio, notification, or device-admin permission appears. `BIND_ACCESSIBILITY_SERVICE` and `BIND_QUICK_SETTINGS_TILE` remain protection declarations on their services, not `<uses-permission>` entries.
 - [x] Record run #54 APK SHA-256: debug APK `d74cc1c2a3a6bfd04118bcebc9311c796c664597a5a49430dfed584f955031df`; unsigned release APK `860309cef7219ea09e0b20c801dcde126d7a8c22ea33b56111a8caf7d9c10bb8`. The unsigned release APK is validation-only and must not be installed/distributed as a release package. The debug APK is a development build, not the signed public release.
+- [x] Add a CI guard that checks both APK permission allowlists and rejects accessibility event subscriptions/window-content retrieval; shell syntax was checked locally.
+- [ ] Execute the new CI guard on a GitHub Actions run; run #54 completed before this workflow-only guard was added.
 - [ ] Verify clean install has no permission dialog and first launch displays mode selection on physical devices.
 - [ ] Verify Black Screen asks for overlay special access only after Continue, and resumes correctly after granting/denying it.
 - [ ] Verify Screen Off / Lock opens Accessibility settings only after Continue, requires explicit user enablement, and handles returning to the app.
 - [ ] Verify mode changes, saved selection, Quick Settings routing, Android 8 fallback, and no-permission-denied crash on physical devices.
 - [ ] Test media behavior separately for each supported app/device; do not assume background playback is allowed.
 
-**Completion status:** Source and documentation hardening are committed. Exact-head CI run #54 passes, and the merged manifests of both generated APKs have been inspected. Physical-device verification remains pending, and the reported Play Protect warning has not been conclusively resolved. Keep PR #3 in Draft. Do not merge or publish until physical-device verification, final release signing, and the warning investigation are complete.
+**Completion status:** Source and documentation hardening are committed. Source hardening passed exact-head CI run #54, and both generated APK manifests were inspected. A follow-up CI allowlist guard has since been added but still needs an Actions run. Physical-device verification remains pending, and the reported Play Protect warning has not been conclusively resolved. Keep PR #3 in Draft. Do not merge or publish until physical-device verification, final release signing, and the warning investigation are complete.
 
 ## Permissions and privacy audit
 
