@@ -13,7 +13,8 @@
 - Allow users to change modes later; check only the selected mode's access when it is started.
 - Keep Screen Off / Lock available only on Android 9 (API 28)+.
 - Keep Accessibility window-content retrieval disabled.
-- Add `WAKE_LOCK` and a bounded `PARTIAL_WAKE_LOCK` for explicit Screen Off / Lock actions; release it on screen-on, service teardown, or after a 2-hour safety timeout.\n- Document payment-app compatibility limitations of enabled Accessibility services; do not attempt to bypass app security checks.
+- Add `WAKE_LOCK` and a bounded `PARTIAL_WAKE_LOCK` for explicit Screen Off / Lock actions; release it on screen-on, service teardown, or after a 2-hour safety timeout.
+- Document payment-app compatibility limitations of enabled Accessibility services; do not attempt to bypass app security checks.
 - Preserve the AMOLED overlay and double-tap restoration.
 - Increment version to 1.3.0 (version code 4).
 
