@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -51,7 +52,7 @@ public class MainActivity extends Activity {
         modes.setOrientation(RadioGroup.VERTICAL);
 
         blackScreenOption = new RadioButton(this);
-        blackScreenOption.setId(1);
+        blackScreenOption.setId(View.generateViewId());
         blackScreenOption.setText("Black Screen (AMOLED)");
         modes.addView(blackScreenOption);
 
@@ -62,7 +63,7 @@ public class MainActivity extends Activity {
         modes.addView(blackDescription);
 
         screenOffOption = new RadioButton(this);
-        screenOffOption.setId(2);
+        screenOffOption.setId(View.generateViewId());
         screenOffOption.setText("Screen Off / Lock");
         modes.addView(screenOffOption);
 
@@ -74,8 +75,8 @@ public class MainActivity extends Activity {
         layout.addView(modes);
 
         modes.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == 1) DisplayModeManager.setMode(this, DisplayModeManager.BLACK_SCREEN);
-            if (checkedId == 2 && DisplayModeManager.isScreenOffSupported()) {
+            if (blackScreenOption != null && checkedId == blackScreenOption.getId()) DisplayModeManager.setMode(this, DisplayModeManager.BLACK_SCREEN);
+            if (screenOffOption != null && checkedId == screenOffOption.getId() && DisplayModeManager.isScreenOffSupported()) {
                 DisplayModeManager.setMode(this, DisplayModeManager.SCREEN_OFF);
             }
             refreshStatus();
@@ -109,7 +110,8 @@ public class MainActivity extends Activity {
 
         setContentView(layout);
         String selected = DisplayModeManager.getMode(this);
-        modes.check(DisplayModeManager.SCREEN_OFF.equals(selected) ? 2 : 1);
+        modes.check(DisplayModeManager.SCREEN_OFF.equals(selected)
+                ? screenOffOption.getId() : blackScreenOption.getId());
     }
 
     private void startSelectedMode() {
