@@ -9,7 +9,6 @@ import android.view.Gravity;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends Activity {
     @Override
@@ -19,7 +18,7 @@ public class MainActivity extends Activity {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setGravity(Gravity.CENTER);
-        layout.setPadding(48, 48, 48, 48);
+        layout.setPadding(40, 40, 40, 40);
 
         TextView title = new TextView(this);
         title.setText("Screen Off Play");
@@ -29,24 +28,31 @@ public class MainActivity extends Activity {
 
         TextView info = new TextView(this);
         info.setText(
-                "AMOLED Blackout keeps a pure black (#000000) overlay visible at minimum window brightness. " +
-                "The overlay keeps the display awake to prevent the normal screen timeout from locking the phone.\n\n" +
-                "1. Allow Display over other apps.\n" +
+                "New Screen Lock mode uses Android Accessibility to lock the device display. " +
+                "A separate partial wake lock keeps the CPU running for up to 30 minutes or until the screen wakes.\n\n" +
+                "Setup:\n" +
+                "1. Enable Screen Off Play under Android Accessibility settings.\n" +
                 "2. Add the Screen Off tile to Quick Settings.\n" +
-                "3. Start media playback, then tap the tile.\n" +
-                "4. The screen stays black and the phone does not auto-lock from screen timeout.\n" +
-                "5. Double-tap the black screen to restore it. The power button can still lock the phone manually.\n\n" +
-                "This is a black-screen mode, not a physical display power-off. The display remains powered. " +
-                "Media playback is still controlled by Android and the media app; this app cannot bypass YouTube or other apps' playback restrictions."
+                "3. Start media playback, open Quick Settings and tap Screen Off.\n" +
+                "4. Android locks the screen while the system wake lock is held. Press the power button or use your normal unlock method to wake the phone.\n\n" +
+                "The wake lock is released when the screen turns on, if the accessibility service stops, or after a 30-minute safety timeout. " +
+                "Holding the CPU awake can increase battery use. Android and each media app still control background playback; this app does not bypass playback restrictions.\n\n" +
+                "The older AMOLED black overlay remains available as a separate legacy mode."
         );
         info.setTextSize(15f);
         info.setGravity(Gravity.CENTER);
         info.setPadding(0, 24, 0, 24);
         layout.addView(info);
 
-        Button btn = new Button(this);
-        btn.setText("Allow overlay permission");
-        btn.setOnClickListener(v -> {
+        Button accessibilityButton = new Button(this);
+        accessibilityButton.setText("Enable Screen Off Play Accessibility");
+        accessibilityButton.setOnClickListener(v ->
+                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+        layout.addView(accessibilityButton);
+
+        Button overlayButton = new Button(this);
+        overlayButton.setText("Start legacy AMOLED blackout");
+        overlayButton.setOnClickListener(v -> {
             if (!Settings.canDrawOverlays(this)) {
                 Intent intent = new Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -54,12 +60,11 @@ public class MainActivity extends Activity {
                 );
                 startActivity(intent);
             } else {
-                Toast.makeText(this,
-                        "Add the Screen Off tile to Quick Settings, then use it over your media app.",
-                        Toast.LENGTH_LONG).show();
+                OverlayController.show(this);
             }
         });
-        layout.addView(btn);
+        layout.addView(overlayButton);
+
         setContentView(layout);
     }
 }
