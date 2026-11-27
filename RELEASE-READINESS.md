@@ -24,14 +24,14 @@ The minimum SDK is a build declaration, not proof that every device on that vers
 - [x] Preserve the pure-black overlay and minimum window brightness.
 - [x] Preserve double-tap restoration and the existing Quick Settings toggle.
 - [x] Update in-app instructions, README, and changelog to describe the awake-blackout behavior and its limitations.
-- [ ] Run Android lint, unit tests, debug build, and release build on CI for the exact PR head.
+- [x] GitHub Actions Android Build workflow #31 passed on exact PR head `757ccf4cc8201cdeea2fc6272861de83db487dd7`: Android lint, unit tests, debug APK build, unsigned release APK build, artifact uploads, and ephemeral-key release-signing smoke test all succeeded. This validates CI build tasks, not physical-device behavior or the maintainer's long-term release key.
 - [ ] Verify on physical devices that the screen timeout does not lock the phone while the overlay is active.
 - [ ] Verify double-tap restoration after extended use and after opening Quick Settings.
 - [ ] Test media playback with supported media apps; record each app's own background-playback policy separately.
 - [ ] Test manual power-button locking and normal restoration after wake.
 - [ ] Record manufacturer/model, Android version, app version/commit, and results before declaring device compatibility.
 
-The source change is implemented, but device behavior and CI are not yet verified. Do not mark the release stable until the unchecked gates pass.
+The source change and automated CI verification are complete for the recorded PR head. Physical-device behavior remains unverified. Do not mark the release stable until the remaining device-test gates pass.
 
 ## Before calling a build a public stable release
 
