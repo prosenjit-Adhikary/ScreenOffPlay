@@ -39,6 +39,24 @@ jobs:
         run: gradle assembleDebug
       - name: Build release APK (unsigned validation build)
         run: gradle assembleRelease
+      - name: Enforce least-privilege APK permissions and accessibility configuration
+        run: |
+          set -euo pipefail
+          expected_permission="android.permission.SYSTEM_ALERT_WINDOW"
+          for apk in app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/release/app-release-unsigned.apk; do
+            actual_permissions="$(\"$ANDROID_HOME/build-tools/34.0.0/aapt\" dump permissions \"$apk\" | sed -n "s/.*uses-permission: name='\\([^']*\\)'.*/\\1/p" | sort -u)"
+            if [[ "$actual_permissions" != "$expected_permission" ]]; then
+              echo "::error::Unexpected requested permissions in $apk"
+              printf 'Expected: %s\\nActual:\\n%s\\n' "$expected_permission" "$actual_permissions"
+              exit 1
+            fi
+          done
+          config="app/src/main/res/xml/accessibility_service_config.xml"
+          grep -Fq 'android:canRetrieveWindowContent="false"' "$config"
+          if grep -Eq 'android:accessibilityEventTypes|android:canRetrieveWindowContent="true"' "$config"; then
+            echo "::error::Accessibility service requests unnecessary events or window-content access"
+            exit 1
+          fi
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
