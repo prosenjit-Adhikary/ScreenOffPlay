@@ -10,7 +10,8 @@ import android.view.accessibility.AccessibilityEvent;
 
 /**
  * Requests Android to lock the device through the public accessibility global action.
- * The service does not hold a wake lock or prevent normal Android power management.
+ * It subscribes to no accessibility events, cannot retrieve window content, and does
+ * not hold a wake lock or prevent normal Android power management.
  */
 public class ScreenLockAccessibilityService extends AccessibilityService {
     private static final String PREFS = "screen_lock_state";
@@ -32,6 +33,8 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         instance = this;
+        // Clear stale UI state after a service/process restart.
+        setActive(false);
 
         if (!receiverRegistered) {
             IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
@@ -46,7 +49,7 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        // No window content is inspected or collected.
+        // No accessibility events are requested by the service configuration.
     }
 
     @Override
