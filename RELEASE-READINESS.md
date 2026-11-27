@@ -29,14 +29,13 @@ The minimum SDK declaration does not mean the new lock mode is supported on API 
 - [x] Add an in-app link to Android Accessibility settings.
 - [x] Preserve the old AMOLED overlay as a separate legacy mode.
 - [x] Update README and changelog with setup, permission, privacy, power-management, and compatibility details.
-- [x] Previous exact-head CI workflow #38 passed on pre-change commit 418004ae70c72eb3735c6504e08b942297d5ef01. This evidence does not cover the current wake-lock-removal changes.
-- [ ] Run exact-head GitHub Actions after the wake-lock removal and require all checks to pass.
+- [x] Exact-head GitHub Actions workflow #39 passed on commit 25dd602967ad5bf4a6728213b371b9a7a05c83c3. Android SDK setup, Android lint, unit tests, debug APK build, unsigned release APK validation, artifact uploads, and ephemeral CI signing smoke test all passed.
 - [ ] Verify API 28+ lock action and screen-off behavior on physical devices from multiple OEMs.
 - [ ] Verify normal wake/unlock flow and Quick Settings tile state recovery.
 - [ ] Test media playback separately for each target media app; do not assume background playback is allowed.
 - [ ] Verify API 26–27 gracefully use only the legacy overlay and do not claim new lock-mode support.
 
-**Completion status:** Wake-lock removal and documentation changes are implemented in source on the feature branch. The new exact-head CI run and all physical-device checks are pending. Do not call v1.3.0 release-ready until exact-head CI and required device tests pass.
+**Completion status:** Source implementation, documentation, and exact-head CI are complete. Physical-device validation remains outstanding and cannot be inferred from CI. Keep PR #3 in Draft and do not merge or publish v1.3.0 until the required device checks are recorded.
 
 ## v1.2.0 implementation and verification history
 
@@ -70,7 +69,7 @@ Accessibility access is powerful and must be explained clearly to users. Do not 
 ## Before calling a build a public stable release
 
 - [ ] Build debug and release variants from the exact tagged commit.
-- [ ] Run Android lint and available automated tests; resolve release-blocking findings.
+- [x] Run Android lint and available automated tests on exact implementation commit 25dd602967ad5bf4a6728213b371b9a7a05c83c3; all workflow #39 checks passed.
 - [ ] Verify accessibility enable/disable and lock action behavior on physical devices.
 - [ ] Test media behavior separately for each supported app and device.
 - [ ] Test legacy overlay permission, double-tap restoration, rotation, and lock/unlock.
