@@ -32,13 +32,13 @@ On API 26–27, Screen Off / Lock is disabled in the selector and the Quick Sett
 - [x] Invoke GLOBAL_ACTION_LOCK_SCREEN from the user-initiated Quick Settings action.
 - [x] Remove PARTIAL_WAKE_LOCK acquisition, wake-lock lifecycle code, timeout logic, and WAKE_LOCK manifest permission.
 - [x] Update README and changelog with selectable-mode behavior and setup.
-- [ ] Run exact-final-head CI after the selectable-mode implementation.
+- [x] Run exact-code-head CI after the selectable-mode implementation: workflow run #45 (`46007136598`) passed all steps on code commit `f4cd197580f35d8da591e664793fa46305496d64` (Android lint, unit tests, debug APK, unsigned release validation APK, artifact uploads, and ephemeral CI signing smoke test).
 - [ ] Verify both modes, changing the selection, app restart persistence, and Quick Settings routing on physical devices.
 - [ ] Verify API 26–27 shows only Black Screen and never attempts the unavailable lock action.
 - [ ] Verify API 28+ Accessibility enable/disable and lock action behavior on physical devices.
 - [ ] Test media behavior separately for each supported app and device; do not assume background playback is allowed.
 
-**Completion status:** Selectable-mode source changes and documentation are committed to the PR branch. Automated verification for the final head and all physical-device checks remain outstanding. Keep PR #3 in Draft and do not merge or publish v1.3.0 until exact-head CI and required device checks pass.
+**Completion status:** Selectable-mode implementation is committed and its exact code commit passed CI workflow run #45. This PASS covers the code commit, not subsequent documentation-only commits. Physical-device checks remain outstanding and cannot be inferred from CI. Keep PR #3 in Draft and do not merge or publish v1.3.0 until device checks are recorded and the latest PR head has passing CI.
 
 ## v1.2.0 implementation and verification history
 
@@ -69,8 +69,8 @@ The accessibility service sets canRetrieveWindowContent=false and does not inspe
 
 ## Before calling a build a public stable release
 
-- [ ] Build debug and release variants from the exact tagged commit.
-- [ ] Run Android lint and available automated tests on the exact final PR head.
+- [x] CI built the debug APK and unsigned release validation APK on code commit `f4cd197580f35d8da591e664793fa46305496d64`; [ ] build release variant from the exact tagged commit and sign with maintainer's long-term release key.
+- [x] Android lint and unit tests passed on code commit `f4cd197580f35d8da591e664793fa46305496d64` in workflow run #45; rerun against any later code changes.
 - [ ] Verify both selectable modes and Quick Settings behavior on physical devices.
 - [ ] Verify saved selection survives app restart and can be changed repeatedly.
 - [ ] Test at least one physical device from each Android/OEM family claimed as supported.
