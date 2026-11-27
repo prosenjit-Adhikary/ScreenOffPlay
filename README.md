@@ -6,13 +6,13 @@ A minimal AMOLED blackout utility with a Quick Settings tile.
 
 - Places a full-screen pure black (`#000000`) overlay above the current app.
 - Sets the overlay window brightness to its minimum (`0.0f`).
-- Does **not** use `FLAG_KEEP_SCREEN_ON`; Android's configured screen timeout remains active and can turn the display panel off normally.
-- Double-tap the black overlay to remove it. If the display has timed out, wake the phone first, then double-tap.
+- Uses `FLAG_KEEP_SCREEN_ON` while the overlay is visible, preventing Android's normal screen timeout from automatically turning off the display and locking the phone.
+- Double-tap the black overlay to remove it. The device power button can still lock the phone manually.
 - No external libraries are used.
 
-On OLED/AMOLED panels, black pixels emit no light. This can substantially reduce display light output, but it is not equivalent to an immediate hardware power-off: display electronics remain active until Android's normal timeout, and actual battery savings vary by device, brightness, refresh rate, and settings.
+On OLED/AMOLED panels, black pixels emit no light. This mode is intended to keep the media app in the foreground without the screen-timeout lock interrupting playback. The display hardware remains powered; this is not a physical panel power-off and does not promise a particular battery saving.
 
-Audio playback is controlled by the media app and Android. This app does not guarantee that YouTube or another app will continue playback after screen timeout and does not bypass media-app background-playback restrictions.
+Audio playback is still controlled by Android and the media app. This app does not bypass YouTube or another app's background-playback restrictions. If the user manually locks the phone or switches away from the media app, that app's own behavior applies.
 
 ## Use
 
@@ -20,10 +20,10 @@ Audio playback is controlled by the media app and Android. This app does not gua
 2. Add **Screen Off** to Quick Settings.
 3. Start media playback in the app you want to use.
 4. Open Quick Settings and tap **Screen Off**.
-5. Leave the phone untouched until its configured screen timeout turns the display off.
-6. Wake the phone and double-tap the black overlay to restore the screen.
+5. The black overlay stays visible and holds the display awake, so the normal screen timeout should not automatically lock the phone.
+6. Double-tap the black screen to restore the display. The power button remains available for manual locking.
 
-For a quicker display-off, set a shorter screen timeout in Android Settings before using the tile.
+To stop blackout mode, double-tap anywhere on the black overlay.
 
 ## Permissions
 
@@ -48,15 +48,12 @@ See [RELEASE-READINESS.md](RELEASE-READINESS.md) for the supported Android API r
 
 ## Development roadmap
 
-The following items are planned for future versions. They are **not included in v1.0.0** unless explicitly listed in the sections above. The roadmap is subject to Android platform limitations and device compatibility testing.
+### v1.2.0 — Awake AMOLED blackout
 
-### v1.2.0 — Usability and visual improvements
-
-- Add a new, polished application logo.
-- Make double-tap detection customizable.
-- Add an optional auto-dismiss timer.
-- Improve the Quick Settings tile and its state handling.
-- Fix screen-rotation, overlay lifecycle, and related reliability issues.
+- Keep the full-screen black overlay visible with minimum window brightness.
+- Add `FLAG_KEEP_SCREEN_ON` so the normal screen timeout does not automatically lock the phone while blackout mode is active.
+- Retain double-tap restoration and the Quick Settings tile.
+- Update in-app guidance and release documentation to distinguish black-screen mode from physical display power-off.
 
 ### v1.3.0 — True screen-off playback (research and implementation target)
 
@@ -67,4 +64,3 @@ The following items are planned for future versions. They are **not included in 
 - Document any required permissions, platform restrictions, and unsupported scenarios.
 
 **Important:** Android does not provide ordinary third-party apps with unrestricted control over powering off the physical display. Background audio behavior is controlled by Android and the media app. Therefore, true display power-off with continued playback is a development target, not a guaranteed capability. The implementation will only be described as supported after real-device testing confirms it. The project will aim to retain its privacy-first approach and avoid adding permissions that are not essential.
-
