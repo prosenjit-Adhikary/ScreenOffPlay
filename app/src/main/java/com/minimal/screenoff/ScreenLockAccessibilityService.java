@@ -118,7 +118,7 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
                 service.setActive(true);
                 return true;
             }
-        } catch (SecurityException | RuntimeException ignored) {
+        } catch (RuntimeException ignored) {
             // Permission may have been revoked or the system may reject the action.
         }
 
