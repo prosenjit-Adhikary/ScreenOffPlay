@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
         layout.addView(title);
 
         TextView intro = new TextView(this);
-        intro.setText("Choose the screen behavior you want. No special access is requested during installation. The permission for your selected mode is explained and requested only when you continue.");
+        intro.setText("Choose the screen behavior you want. No special access is requested during installation. The permission for your selected mode is explained and requested only when you continue. Some banking and payment apps may restrict access while an Accessibility service or screen overlay is active; this app does not hide or bypass those security checks.");
         intro.setTextSize(15f);
         intro.setPadding(0, 20, 0, 16);
         layout.addView(intro);
@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         modes.addView(blackScreenOption);
 
         TextView blackDescription = new TextView(this);
-        blackDescription.setText("Displays a pure-black overlay and keeps the display awake. Double-tap the overlay to restore the screen. Android asks for Display over other apps access only when you start this mode.");
+        blackDescription.setText("Displays a pure-black overlay and keeps the display awake. Double-tap the overlay to restore the screen. Android asks for Display over other apps access only when you start this mode. Close the overlay before opening banking or payment apps.");
         blackDescription.setTextSize(13f);
         blackDescription.setPadding(36, 0, 0, 12);
         modes.addView(blackDescription);
@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
         modes.addView(screenOffOption);
 
         TextView lockDescription = new TextView(this);
-        lockDescription.setText("Asks Android to lock the device. Available on Android 9 (API 28)+. You must explicitly enable the app's Accessibility service in Android Settings when you choose to start this mode. The service does not read screen content.");
+        lockDescription.setText("Asks Android to lock the device and temporarily keeps the CPU awake for up to 2 hours. Available on Android 9 (API 28)+. You must explicitly enable the app's Accessibility service in Android Settings when you choose to start this mode. Some banking/payment apps may refuse to run while this service is enabled; temporarily turn it off in Android Accessibility settings to use those apps. The service does not read screen content.");
         lockDescription.setTextSize(13f);
         lockDescription.setPadding(36, 0, 0, 12);
         modes.addView(lockDescription);
