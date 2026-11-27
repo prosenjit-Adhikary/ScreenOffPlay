@@ -2,61 +2,59 @@
 
 ## Project status
 
-ScreenOffPlay 1.3.0 provides two user-selectable behaviors: **Black Screen (AMOLED)** and **Screen Off / Lock**. The user's selection is persisted locally and the Quick Settings tile follows that selection. Users can change the mode at any time in the app.
+ScreenOffPlay 1.3.0 provides two user-selectable behaviors: **Black Screen (AMOLED)** and **Screen Off / Lock**. The selection is saved locally and used by the Quick Settings tile. Users can change it at any time.
 
-No PARTIAL_WAKE_LOCK is acquired and WAKE_LOCK permission is not requested. Android retains normal control of CPU sleep, Doze, and background execution. A successful source change or CI build does not prove physical display behavior, media playback continuity, or OEM compatibility.
+**Permission onboarding policy:** installation must not request or trigger runtime/special app access. On first launch the user chooses a mode. Only when the user taps Continue for that selected mode does the app check its required access and, if missing, open the relevant Android Settings page. Declining one mode's access must not block installation or the other mode. No special access is enabled silently.
+
+No PARTIAL_WAKE_LOCK is acquired and WAKE_LOCK permission is not requested. Android retains normal control of CPU sleep, Doze, and background execution. A successful source change or CI build does not prove physical display behavior, media playback continuity, OEM compatibility, or that Play Protect will accept every distributed APK.
 
 ## Current declared Android range
 
 - App version: 1.3.0 (version code 4).
 - Minimum Android version: Android 8.0 (API 26), as declared by minSdk.
-- Black Screen (AMOLED): Android 8.0+; requires Display over other apps permission.
-- Screen Off / Lock: Android 9 (API 28)+; requires the user-enabled AccessibilityService.
+- Black Screen (AMOLED): Android 8.0+; requires Display over other apps special access, requested only when the user starts this mode.
+- Screen Off / Lock: Android 9 (API 28)+; requires the user-enabled AccessibilityService, configured only when the user starts this mode.
 - Compile SDK: Android 14 (API 34).
 - Target SDK: Android 14 (API 34).
 - Java: 17.
 - External runtime dependencies: none declared in the app module.
 
-On API 26–27, Screen Off / Lock is disabled in the selector and the Quick Settings tile can use Black Screen only.
+On API 26–27, Screen Off / Lock is disabled and Black Screen is the only available mode.
 
 ## v1.3.0 implementation ledger
 
-- [x] Add persistent local storage for the selected display mode; default to Black Screen (AMOLED).
-- [x] Add in-app radio selection for Black Screen (AMOLED) and Screen Off / Lock.
-- [x] Explain each mode's behavior, permission requirements, and Android version support in the UI.
-- [x] Allow users to change the mode later; persist selection across app restarts.
+- [x] Persist the selected display mode locally; default to Black Screen (AMOLED).
+- [x] Allow users to change the selected mode at any time.
 - [x] Route the Quick Settings tile through the saved selection.
 - [x] Keep Screen Off / Lock unavailable on API 26–27.
 - [x] Preserve the legacy AMOLED overlay and double-tap restoration.
-- [x] Add AccessibilityService declaration protected by BIND_ACCESSIBILITY_SERVICE and configure it without window-content retrieval.
-- [x] Invoke GLOBAL_ACTION_LOCK_SCREEN from the user-initiated Quick Settings action.
-- [x] Remove PARTIAL_WAKE_LOCK acquisition, wake-lock lifecycle code, timeout logic, and WAKE_LOCK manifest permission.
-- [x] Update README and changelog with selectable-mode behavior and setup.
-- [x] Run exact-code-head CI after the selectable-mode implementation: workflow run #45 (`46007136598`) passed all steps on code commit `f4cd197580f35d8da591e664793fa46305496d64` (Android lint, unit tests, debug APK, unsigned release validation APK, artifact uploads, and ephemeral CI signing smoke test).
-- [ ] Verify both modes, changing the selection, app restart persistence, and Quick Settings routing on physical devices.
-- [ ] Verify API 26–27 shows only Black Screen and never attempts the unavailable lock action.
-- [ ] Verify API 28+ Accessibility enable/disable and lock action behavior on physical devices.
-- [ ] Test media behavior separately for each supported app and device; do not assume background playback is allowed.
+- [x] Keep Accessibility window-content retrieval disabled.
+- [x] Remove PARTIAL_WAKE_LOCK acquisition and WAKE_LOCK manifest permission.
+- [x] Update MainActivity so the user chooses a mode before any mode-specific special access is requested.
+- [x] Check only the selected mode's access after the user taps Continue; explain why access is needed and open Android Settings only if it is missing.
+- [x] Remove the always-visible buttons for unrelated permission settings.
+- [x] Update README and CHANGELOG with the install-first/permission-later flow.
+- [ ] Audit merged manifest and APK permission list from a fresh build.
+- [ ] Run Android lint, unit tests, debug APK, and unsigned release validation build on the exact updated PR head.
+- [ ] Verify clean install has no permission dialog and first launch displays mode selection on physical devices.
+- [ ] Verify Black Screen asks for overlay special access only after Continue, and resumes correctly after granting/denying it.
+- [ ] Verify Screen Off / Lock opens Accessibility settings only after Continue, requires explicit user enablement, and handles returning to the app.
+- [ ] Verify mode changes, saved selection, Quick Settings routing, Android 8 fallback, and no-permission-denied crash on physical devices.
+- [ ] Test media behavior separately for each supported app/device; do not assume background playback is allowed.
 
-**Completion status:** Selectable-mode implementation is committed and its exact code commit passed CI workflow run #45. This PASS covers the code commit, not subsequent documentation-only commits. Physical-device checks remain outstanding and cannot be inferred from CI. Keep PR #3 in Draft and do not merge or publish v1.3.0 until device checks are recorded and the latest PR head has passing CI.
+**Completion status:** The permission-onboarding source and documentation changes are committed to PR #3. They are not yet CI-verified on the latest PR head and have not been physically tested. Keep PR #3 in Draft. Do not merge or publish until exact-head CI and physical-device verification pass.
 
-## v1.2.0 implementation and verification history
+## Permissions and privacy audit
 
-- [x] Add FLAG_KEEP_SCREEN_ON to the full-screen overlay window flags.
-- [x] Preserve the pure-black overlay and minimum window brightness.
-- [x] Preserve double-tap restoration and the Quick Settings tile.
-- [x] Update in-app instructions, README, and changelog.
-- [x] Previous v1.2.0 CI workflow #33 passed on commit dac5643fabca405d3f63275c877a316e4fb3abec.
-- [ ] Physical-device verification is not documented in this ledger.
+The current manifest intentionally declares only Android special/system service permissions needed by implemented features:
 
-## Permissions and privacy
+- `SYSTEM_ALERT_WINDOW`: required by Android for the optional Display over other apps special-access flow used by Black Screen. It is not a dangerous runtime permission and does not grant access during installation. The user grants it manually in Android Settings.
+- `BIND_ACCESSIBILITY_SERVICE`: protects the app's AccessibilityService binding. Android does not grant it to the app at install; the user explicitly enables the service in Accessibility settings.
+- `BIND_QUICK_SETTINGS_TILE`: system protection for the Quick Settings tile.
 
-- BIND_ACCESSIBILITY_SERVICE: Android-enforced service binding permission; the user explicitly enables the service in Settings.
-- SYSTEM_ALERT_WINDOW: used only by Black Screen mode.
-- BIND_QUICK_SETTINGS_TILE: protects the Quick Settings tile.
-- WAKE_LOCK: not requested or used.
+No Internet, storage, audio-recording, device-admin, notification, WAKE_LOCK, or dangerous runtime permission is requested by the app. Recheck the merged manifest and final APK permission list on every release. Do not claim Play Protect approval solely from this manifest audit; investigate any reported block using the exact Play Protect warning and APK build/signature.
 
-The accessibility service sets canRetrieveWindowContent=false and does not inspect or collect screen content. Re-audit this behavior and the manifest on every release. Accessibility access is powerful and must be clearly explained.
+The accessibility service sets `canRetrieveWindowContent=false` and does not inspect or collect screen content. Accessibility access is powerful and must be clearly explained.
 
 ## Functional limitations and power behavior
 
@@ -69,13 +67,14 @@ The accessibility service sets canRetrieveWindowContent=false and does not inspe
 
 ## Before calling a build a public stable release
 
-- [x] CI built the debug APK and unsigned release validation APK on code commit `f4cd197580f35d8da591e664793fa46305496d64`; [ ] build release variant from the exact tagged commit and sign with maintainer's long-term release key.
-- [x] Android lint and unit tests passed on code commit `f4cd197580f35d8da591e664793fa46305496d64` in workflow run #45; rerun against any later code changes.
+- [ ] Latest PR-head CI passes Android lint, unit tests, debug APK, and unsigned release validation APK.
+- [ ] Inspect the merged manifest and APK permission list; confirm no unexpected permission was introduced.
+- [ ] Verify clean install, first-launch mode selection, and deferred permission onboarding on physical devices.
 - [ ] Verify both selectable modes and Quick Settings behavior on physical devices.
 - [ ] Verify saved selection survives app restart and can be changed repeatedly.
 - [ ] Test at least one physical device from each Android/OEM family claimed as supported.
 - [ ] Confirm no crash, ANR, or unexpected permission prompt in tested scenarios.
-- [ ] Sign the APK with the maintainer's long-term release key. Never commit the keystore or passwords.
+- [ ] Build the release variant from the exact tagged commit and sign with maintainer's long-term release key.
 - [ ] Verify the APK signature and record its SHA-256 checksum.
 - [ ] Publish release notes, supported-device test results, known limitations, and source tag.
 - [ ] Preserve the same signing key for all future updates distributed under the same application ID.
