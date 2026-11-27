@@ -6,18 +6,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.PowerManager;
 import android.view.accessibility.AccessibilityEvent;
 
 /**
  * Requests Android to lock the device through the public accessibility global action.
- * It subscribes to no accessibility events, cannot retrieve window content, and does
- * not hold a wake lock or prevent normal Android power management.
+ * It subscribes to no accessibility events and cannot retrieve window content.
+ * A bounded partial wake lock keeps the CPU awake temporarily after an explicit
+ * user-requested lock; Android and the media app still control playback policy.
  */
 public class ScreenLockAccessibilityService extends AccessibilityService {
     private static final String PREFS = "screen_lock_state";
     private static final String KEY_ACTIVE = "active";
+    private static final long WAKE_LOCK_TIMEOUT_MS = 2L * 60L * 60L * 1000L;
 
     private static volatile ScreenLockAccessibilityService instance;
+    private PowerManager.WakeLock wakeLock;
     private boolean receiverRegistered;
 
     private final BroadcastReceiver screenStateReceiver = new BroadcastReceiver() {
@@ -33,7 +37,6 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         instance = this;
-        // Clear stale UI state after a service/process restart.
         setActive(false);
 
         if (!receiverRegistered) {
@@ -60,7 +63,7 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
     @Override
     public boolean onUnbind(Intent intent) {
         setActive(false);
-        instance = null;
+        if (instance == this) instance = null;
         return super.onUnbind(intent);
     }
 
@@ -98,6 +101,7 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
         }
 
         try {
+            service.acquireCpuWakeLock();
             boolean locked = service.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
             service.setActive(locked);
             return locked;
@@ -108,7 +112,36 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
         }
     }
 
+    private synchronized void acquireCpuWakeLock() {
+        PowerManager powerManager =
+                (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (powerManager == null) {
+            throw new IllegalStateException("PowerManager is unavailable");
+        }
+        if (wakeLock == null) {
+            wakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    getPackageName() + ":ScreenOffPlay"
+            );
+            wakeLock.setReferenceCounted(false);
+        }
+        if (!wakeLock.isHeld()) {
+            // Safety timeout prevents an indefinite CPU hold if the screen-on
+            // broadcast or service teardown is missed by the operating system.
+            wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS);
+        }
+    }
+
+    private synchronized void releaseCpuWakeLock() {
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+    }
+
     private void setActive(boolean active) {
+        if (!active) {
+            releaseCpuWakeLock();
+        }
         getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit().putBoolean(KEY_ACTIVE, active).apply();
     }
