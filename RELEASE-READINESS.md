@@ -34,25 +34,26 @@ On API 26–27, Screen Off / Lock is disabled and Black Screen is the only avail
 - [x] Check only the selected mode's access after the user taps Continue; explain why access is needed and open Android Settings only if it is missing.
 - [x] Remove the always-visible buttons for unrelated permission settings.
 - [x] Update README and CHANGELOG with the install-first/permission-later flow.
-- [ ] Audit merged manifest and APK permission list from a fresh build.
-- [ ] Run Android lint, unit tests, debug APK, and unsigned release validation build on the exact updated PR head.
+- [x] Source-level manifest audit: only SYSTEM_ALERT_WINDOW is declared as a uses-permission; service binding protections are declared on their respective services.
+- [x] Exact-head GitHub Actions verification: Android Build run #49 passed on commit 6ded987a747bb0bbce55866ce964e83080aa76f3. Android lint, unit tests, debug APK, unsigned release APK, artifact uploads, and ephemeral-key release-signing smoke test all completed successfully.
+- [ ] Inspect the merged manifest and APK permission list from the downloaded exact-head build artifact.
 - [ ] Verify clean install has no permission dialog and first launch displays mode selection on physical devices.
 - [ ] Verify Black Screen asks for overlay special access only after Continue, and resumes correctly after granting/denying it.
 - [ ] Verify Screen Off / Lock opens Accessibility settings only after Continue, requires explicit user enablement, and handles returning to the app.
 - [ ] Verify mode changes, saved selection, Quick Settings routing, Android 8 fallback, and no-permission-denied crash on physical devices.
 - [ ] Test media behavior separately for each supported app/device; do not assume background playback is allowed.
 
-**Completion status:** The permission-onboarding source and documentation changes are committed to PR #3. They are not yet CI-verified on the latest PR head and have not been physically tested. Keep PR #3 in Draft. Do not merge or publish until exact-head CI and physical-device verification pass.
+**Completion status:** Source and documentation changes are committed. Exact-head CI is passing (run #49). Physical-device testing and APK-level merged-manifest/permission inspection remain pending. Keep PR #3 in Draft. Do not merge or publish until physical-device verification and APK permission inspection pass.
 
 ## Permissions and privacy audit
 
-The current manifest intentionally declares only Android special/system service permissions needed by implemented features:
+The source manifest intentionally declares only Android special/system service permissions needed by implemented features:
 
 - `SYSTEM_ALERT_WINDOW`: required by Android for the optional Display over other apps special-access flow used by Black Screen. It is not a dangerous runtime permission and does not grant access during installation. The user grants it manually in Android Settings.
 - `BIND_ACCESSIBILITY_SERVICE`: protects the app's AccessibilityService binding. Android does not grant it to the app at install; the user explicitly enables the service in Accessibility settings.
 - `BIND_QUICK_SETTINGS_TILE`: system protection for the Quick Settings tile.
 
-No Internet, storage, audio-recording, device-admin, notification, WAKE_LOCK, or dangerous runtime permission is requested by the app. Recheck the merged manifest and final APK permission list on every release. Do not claim Play Protect approval solely from this manifest audit; investigate any reported block using the exact Play Protect warning and APK build/signature.
+No Internet, storage, audio-recording, device-admin, notification, WAKE_LOCK, or dangerous runtime permission is requested by the app's source manifest. Recheck the merged manifest and final APK permission list on every release. Do not claim Play Protect approval solely from this manifest audit; investigate any reported block using the exact Play Protect warning and APK build/signature.
 
 The accessibility service sets `canRetrieveWindowContent=false` and does not inspect or collect screen content. Accessibility access is powerful and must be clearly explained.
 
@@ -67,7 +68,7 @@ The accessibility service sets `canRetrieveWindowContent=false` and does not ins
 
 ## Before calling a build a public stable release
 
-- [ ] Latest PR-head CI passes Android lint, unit tests, debug APK, and unsigned release validation APK.
+- [x] Latest PR-head CI passes Android lint, unit tests, debug APK, and unsigned release validation APK (run #49, exact head recorded above).
 - [ ] Inspect the merged manifest and APK permission list; confirm no unexpected permission was introduced.
 - [ ] Verify clean install, first-launch mode selection, and deferred permission onboarding on physical devices.
 - [ ] Verify both selectable modes and Quick Settings behavior on physical devices.
