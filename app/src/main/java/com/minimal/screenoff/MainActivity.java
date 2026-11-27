@@ -8,62 +8,139 @@ import android.provider.Settings;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
+    private RadioButton blackScreenOption;
+    private RadioButton screenOffOption;
+    private TextView status;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        buildScreen();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshStatus();
+    }
+
+    private void buildScreen() {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setGravity(Gravity.CENTER);
-        layout.setPadding(40, 40, 40, 40);
+        layout.setGravity(Gravity.CENTER_HORIZONTAL);
+        layout.setPadding(40, 36, 40, 36);
 
         TextView title = new TextView(this);
         title.setText("Screen Off Play");
-        title.setTextSize(22f);
+        title.setTextSize(24f);
         title.setGravity(Gravity.CENTER);
         layout.addView(title);
 
-        TextView info = new TextView(this);
-        info.setText(
-                "Screen Off mode uses Android Accessibility to request a device lock. " +
-                "It does not acquire a CPU wake lock; Android remains responsible for normal power management.\n\n" +
-                "Setup:\n" +
-                "1. Enable Screen Off Play under Android Accessibility settings.\n" +
-                "2. Add the Screen Off tile to Quick Settings.\n" +
-                "3. Start media playback, open Quick Settings and tap Screen Off.\n" +
-                "4. Android receives the lock request. Use your normal method to wake and unlock the phone.\n\n" +
-                "Screen Off Play does not force the CPU to stay awake. Background playback depends on Android, device power settings, and the media app; this app does not bypass playback restrictions.\n\n" +
-                "The older AMOLED black overlay remains available as a separate legacy mode."
-        );
-        info.setTextSize(15f);
-        info.setGravity(Gravity.CENTER);
-        info.setPadding(0, 24, 0, 24);
-        layout.addView(info);
+        TextView intro = new TextView(this);
+        intro.setText("Choose how Screen Off Play should work. Your choice is saved and used by the Quick Settings tile. You can change it here any time.");
+        intro.setTextSize(15f);
+        intro.setPadding(0, 20, 0, 16);
+        layout.addView(intro);
+
+        RadioGroup modes = new RadioGroup(this);
+        modes.setOrientation(RadioGroup.VERTICAL);
+
+        blackScreenOption = new RadioButton(this);
+        blackScreenOption.setId(1);
+        blackScreenOption.setText("Black Screen (AMOLED)");
+        modes.addView(blackScreenOption);
+
+        TextView blackDescription = new TextView(this);
+        blackDescription.setText("Shows a pure-black overlay. The display stays awake; double-tap the overlay to restore it. Requires Display over other apps permission.");
+        blackDescription.setTextSize(13f);
+        blackDescription.setPadding(36, 0, 0, 12);
+        modes.addView(blackDescription);
+
+        screenOffOption = new RadioButton(this);
+        screenOffOption.setId(2);
+        screenOffOption.setText("Screen Off / Lock");
+        modes.addView(screenOffOption);
+
+        TextView lockDescription = new TextView(this);
+        lockDescription.setText("Asks Android to lock the device. Available on Android 9 (API 28) and later. Requires enabling Screen Off Play in Accessibility settings. Android controls CPU sleep and media playback.");
+        lockDescription.setTextSize(13f);
+        lockDescription.setPadding(36, 0, 0, 12);
+        modes.addView(lockDescription);
+        layout.addView(modes);
+
+        modes.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == 1) DisplayModeManager.setMode(this, DisplayModeManager.BLACK_SCREEN);
+            if (checkedId == 2 && DisplayModeManager.isScreenOffSupported()) {
+                DisplayModeManager.setMode(this, DisplayModeManager.SCREEN_OFF);
+            }
+            refreshStatus();
+        });
+
+        if (!DisplayModeManager.isScreenOffSupported()) {
+            screenOffOption.setEnabled(false);
+            lockDescription.setText("Unavailable on this Android version. Android 8 (API 26–27) supports Black Screen mode only.");
+        }
+
+        Button applyButton = new Button(this);
+        applyButton.setText("Start selected mode");
+        applyButton.setOnClickListener(v -> startSelectedMode());
+        layout.addView(applyButton);
 
         Button accessibilityButton = new Button(this);
-        accessibilityButton.setText("Enable Screen Off Play Accessibility");
+        accessibilityButton.setText("Accessibility settings");
         accessibilityButton.setOnClickListener(v ->
                 startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
         layout.addView(accessibilityButton);
 
         Button overlayButton = new Button(this);
-        overlayButton.setText("Start legacy AMOLED blackout");
-        overlayButton.setOnClickListener(v -> {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName())
-                );
-                startActivity(intent);
-            } else {
-                OverlayController.show(this);
-            }
-        });
+        overlayButton.setText("Display over other apps permission");
+        overlayButton.setOnClickListener(v -> openOverlaySettings());
         layout.addView(overlayButton);
 
+        status = new TextView(this);
+        status.setTextSize(13f);
+        status.setPadding(0, 20, 0, 0);
+        layout.addView(status);
+
         setContentView(layout);
+        String selected = DisplayModeManager.getMode(this);
+        modes.check(DisplayModeManager.SCREEN_OFF.equals(selected) ? 2 : 1);
+    }
+
+    private void startSelectedMode() {
+        String selected = DisplayModeManager.getMode(this);
+        if (DisplayModeManager.SCREEN_OFF.equals(selected)) {
+            if (!ScreenLockAccessibilityService.isConnected()) {
+                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+                return;
+            }
+            ScreenLockAccessibilityService.lockDisplay(this);
+        } else if (!Settings.canDrawOverlays(this)) {
+            openOverlaySettings();
+        } else {
+            OverlayController.show(this);
+        }
+        refreshStatus();
+    }
+
+    private void openOverlaySettings() {
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
+    }
+
+    private void refreshStatus() {
+        if (status == null) return;
+        String selected = DisplayModeManager.getMode(this);
+        status.setText("Selected mode: " +
+                (DisplayModeManager.SCREEN_OFF.equals(selected) ? "Screen Off / Lock" : "Black Screen (AMOLED)") +
+                "\nThis selection is saved on this device and also controls the Quick Settings tile.");
+        if (blackScreenOption != null) blackScreenOption.setChecked(DisplayModeManager.BLACK_SCREEN.equals(selected));
+        if (screenOffOption != null) screenOffOption.setChecked(DisplayModeManager.SCREEN_OFF.equals(selected));
     }
 }
