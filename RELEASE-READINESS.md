@@ -47,6 +47,17 @@ On API 26–27, Screen Off / Lock is disabled and Black Screen is the only avail
 
 ## Permissions and privacy audit
 
+### Accessibility least-privilege hardening (PR follow-up)
+
+- [x] Remove `typeWindowStateChanged` subscription: the service performs no event-driven work, so it requests no accessibility events.
+- [x] Keep `canRetrieveWindowContent=false`; the service cannot inspect the active window hierarchy.
+- [x] Keep the service limited to `GLOBAL_ACTION_LOCK_SCREEN`; no gestures, screenshots, text extraction, keylogging, or content forwarding are implemented.
+- [x] Reset the persisted tile-active indicator when the service reconnects, preventing stale state after a process/service restart.
+- [ ] Verify the service still binds and `GLOBAL_ACTION_LOCK_SCREEN` works on physical Android 9+ devices after removing the event subscription.
+
+**Play Protect warning investigation:** The project previously received a user report of an Android financial/identity-theft warning during sideload installation. Google documents that certain warnings can be triggered when sideloaded apps request sensitive capabilities commonly abused for financial fraud, including accessibility-related capabilities. This source-level audit does not prove the warning is a false positive and does not establish malware. Preserve the exact warning screenshot/text, APK SHA-256, signing certificate fingerprint, download source, and Play Protect scan result before deciding whether to appeal. Do not ask users to disable Play Protect or bypass a block. See Google's [Play Protect warning guidance](https://developers.google.com/android/play-protect/warning-dev-guidance).
+
+
 The source manifest intentionally declares only Android special/system service permissions needed by implemented features:
 
 - `SYSTEM_ALERT_WINDOW`: required by Android for the optional Display over other apps special-access flow used by Black Screen. It is not a dangerous runtime permission and does not grant access during installation. The user grants it manually in Android Settings.
