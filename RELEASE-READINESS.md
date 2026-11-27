@@ -31,7 +31,7 @@ The minimum SDK declaration does not mean the new lock mode is supported on API 
 - [x] Add an in-app link to Android Accessibility settings.
 - [x] Preserve the old AMOLED overlay as a separate legacy mode.
 - [x] Update README and changelog with setup, permission, privacy, battery, and compatibility details.
-- [ ] Run Android lint, unit tests, debug build, and unsigned release build on the exact PR head.
+- [x] GitHub Actions Android Build workflow #36 passed on implementation commit 63547c725e2ec99cbecf9a07c6bdf383c40a30ac: Android lint, unit tests, debug APK, unsigned release APK, artifact uploads, and ephemeral-key signing smoke test all succeeded.
 - [ ] Verify API 28+ lock action and screen-off behavior on physical devices from multiple OEMs.
 - [ ] Verify screen-on wake-lock release and normal unlock flow.
 - [ ] Verify the 30-minute safety timeout.
@@ -39,7 +39,7 @@ The minimum SDK declaration does not mean the new lock mode is supported on API 
 - [ ] Verify Quick Settings tile state and recovery after service disable/re-enable.
 - [ ] Verify API 26–27 gracefully use only the legacy overlay and do not claim new lock-mode support.
 
-**Completion status:** Implementation and documentation changes are present on the feature branch. Automated build/test verification and all physical-device checks are pending. Do not call v1.3.0 release-ready until the exact-head CI checks and required device tests pass.
+**Completion status:** Implementation is complete on the feature branch and the automated CI suite passed on implementation commit 63547c725e2ec99cbecf9a07c6bdf383c40a30ac. The documentation-only follow-up commit must also pass exact-head CI. All physical-device checks remain pending. Do not call v1.3.0 release-ready until exact-head CI and required device tests pass.
 
 ## v1.2.0 implementation and verification history
 
