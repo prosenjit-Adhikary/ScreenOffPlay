@@ -2,6 +2,10 @@
 
 ## 1.3.0
 
+- Remove the unused window-state accessibility event subscription; the lock service requests no accessibility events and cannot retrieve window content.
+- Reset stale lock-tile state when the accessibility service reconnects.
+- Keep accessibility limited to the explicit Android lock-screen global action.
+
 - Add a persistent in-app mode selector for Black Screen (AMOLED) and Screen Off / Lock.
 - Save the selected mode and route the Quick Settings tile through it.
 - Defer special-access setup until the user chooses to start the selected mode; do not request it during installation.
