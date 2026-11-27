@@ -30,20 +30,12 @@ public class MainActivity extends Activity {
         TextView info = new TextView(this);
         info.setText(
                 "AMOLED Blackout keeps a pure black (#000000) overlay visible at minimum window brightness. " +
-                "The overlay keeps the display awake to prevent the normal screen timeout from locking the phone.
-
-" +
-                "1. Allow Display over other apps.
-" +
-                "2. Add the Screen Off tile to Quick Settings.
-" +
-                "3. Start media playback, then tap the tile.
-" +
-                "4. The screen stays black and the phone does not auto-lock from screen timeout.
-" +
-                "5. Double-tap the black screen to restore it. The power button can still lock the phone manually.
-
-" +
+                "The overlay keeps the display awake to prevent the normal screen timeout from locking the phone.\n\n" +
+                "1. Allow Display over other apps.\n" +
+                "2. Add the Screen Off tile to Quick Settings.\n" +
+                "3. Start media playback, then tap the tile.\n" +
+                "4. The screen stays black and the phone does not auto-lock from screen timeout.\n" +
+                "5. Double-tap the black screen to restore it. The power button can still lock the phone manually.\n\n" +
                 "This is a black-screen mode, not a physical display power-off. The display remains powered. " +
                 "Media playback is still controlled by Android and the media app; this app cannot bypass YouTube or other apps' playback restrictions."
         );
