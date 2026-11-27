@@ -6,7 +6,7 @@ ScreenOffPlay 1.3.0 provides two user-selectable behaviors: **Black Screen (AMOL
 
 **Permission onboarding policy:** installation must not request or trigger runtime/special app access. On first launch the user chooses a mode. Only when the user taps Continue for that selected mode does the app check its required access and, if missing, open the relevant Android Settings page. Declining one mode's access must not block installation or the other mode. No special access is enabled silently.
 
-No PARTIAL_WAKE_LOCK is acquired and WAKE_LOCK permission is not requested. Android retains normal control of CPU sleep, Doze, and background execution. A successful source change or CI build does not prove physical display behavior, media playback continuity, OEM compatibility, or that Play Protect will accept every distributed APK.
+Screen Off / Lock acquires a bounded PARTIAL_WAKE_LOCK only after the user explicitly requests a lock. It is released on ACTION_SCREEN_ON, service interruption/unbind/destruction, or after a 2-hour safety timeout. This reduces the chance of CPU suspension during the requested interval but does not override Doze, OEM restrictions, or media-app playback policy. A successful source change or CI build does not prove physical display behavior, media playback continuity, OEM compatibility, or that Play Protect will accept every distributed APK.
 
 ## Current declared Android range
 
@@ -29,17 +29,17 @@ On API 26–27, Screen Off / Lock is disabled and Black Screen is the only avail
 - [x] Keep Screen Off / Lock unavailable on API 26–27.
 - [x] Preserve the legacy AMOLED overlay and double-tap restoration.
 - [x] Keep Accessibility window-content retrieval disabled.
-- [x] Remove PARTIAL_WAKE_LOCK acquisition and WAKE_LOCK manifest permission.
+- [x] Add WAKE_LOCK and acquire PARTIAL_WAKE_LOCK only for an explicit Screen Off / Lock action, with screen-on/lifecycle release and a 2-hour safety timeout.
 - [x] Update MainActivity so the user chooses a mode before any mode-specific special access is requested.
 - [x] Check only the selected mode's access after the user taps Continue; explain why access is needed and open Android Settings only if it is missing.
 - [x] Remove the always-visible buttons for unrelated permission settings.
 - [x] Update README and CHANGELOG with the install-first/permission-later flow.
-- [x] Source-level manifest audit: only SYSTEM_ALERT_WINDOW is declared as a uses-permission; service binding protections are declared on their respective services.
+- [ ] Verify merged APK permission allowlist contains SYSTEM_ALERT_WINDOW and WAKE_LOCK only; service binding protections remain on their respective services.
 - [x] Exact-head GitHub Actions verification: Android Build run #54 passed on commit `cd842abf7239a0f278114e79257ff9a82c2a777e` after the AccessibilityService hardening. Android lint, Gradle test task, debug APK, unsigned release APK, artifact uploads, and ephemeral-key release-signing smoke test all completed successfully. The repository currently has no app-specific test source files, so the successful `gradle test` task is not evidence of physical-device behavior or broad automated functional coverage.
 - [x] Inspect the merged manifests in both run #54 APK artifacts (source commit `cd842abf7239a0f278114e79257ff9a82c2a777e`): API 26 / target 34; the only `<uses-permission>` is `SYSTEM_ALERT_WINDOW`; no WAKE_LOCK, Internet, storage, audio, notification, or device-admin permission appears. `BIND_ACCESSIBILITY_SERVICE` and `BIND_QUICK_SETTINGS_TILE` remain protection declarations on their services, not `<uses-permission>` entries.
 - [x] Record run #54 APK SHA-256: debug APK `d74cc1c2a3a6bfd04118bcebc9311c796c664597a5a49430dfed584f955031df`; unsigned release APK `860309cef7219ea09e0b20c801dcde126d7a8c22ea33b56111a8caf7d9c10bb8`. The unsigned release APK is validation-only and must not be installed/distributed as a release package. The debug APK is a development build, not the signed public release.
 - [x] Add a CI guard that checks both APK permission allowlists and rejects accessibility event subscriptions/window-content retrieval; shell syntax was checked locally.
-- [ ] Execute the new CI guard on a GitHub Actions run; run #54 completed before this workflow-only guard was added.
+- [ ] Execute the updated CI permission allowlist guard on a GitHub Actions run.
 - [ ] Verify clean install has no permission dialog and first launch displays mode selection on physical devices.
 - [ ] Verify Black Screen asks for overlay special access only after Continue, and resumes correctly after granting/denying it.
 - [ ] Verify Screen Off / Lock opens Accessibility settings only after Continue, requires explicit user enablement, and handles returning to the app.
@@ -68,17 +68,17 @@ The source manifest intentionally declares only Android special/system service p
 - `BIND_ACCESSIBILITY_SERVICE`: protects the app's AccessibilityService binding. Android does not grant it to the app at install; the user explicitly enables the service in Accessibility settings.
 - `BIND_QUICK_SETTINGS_TILE`: system protection for the Quick Settings tile.
 
-No Internet, storage, audio-recording, device-admin, notification, WAKE_LOCK, or dangerous runtime permission is requested by the app's source manifest. Recheck the merged manifest and final APK permission list on every release. Do not claim Play Protect approval solely from this manifest audit; investigate any reported block using the exact Play Protect warning and APK build/signature.
+WAKE_LOCK is requested only for the bounded CPU wake lock used by the explicit Screen Off / Lock action. No Internet, storage, audio-recording, device-admin, notification, or dangerous runtime permission is requested by the app's source manifest. Recheck the merged manifest and final APK permission list on every release. Do not claim Play Protect approval solely from this manifest audit; investigate any reported block using the exact Play Protect warning and APK build/signature.
 
 The accessibility service sets `canRetrieveWindowContent=false` and does not inspect or collect screen content. Accessibility access is powerful and must be clearly explained.
 
-## Functional limitations and power behavior
+## Payment-app compatibility\n\nSome financial apps restrict operation when any third-party Accessibility service is enabled, even when that service does not read screen content. This is an app/security-policy decision and cannot be safely overridden by ScreenOffPlay. To use an affected payment app, the user must turn off ScreenOffPlay under Android Settings → Accessibility → Installed/Downloaded apps, then reopen the payment app. If Black Screen overlay is active, restore it with a double-tap before opening the payment app.\n\n## Functional limitations and power behavior
 
 - Black Screen shows black pixels and holds the display awake; it does not lock the device or physically power off the panel.
 - Screen Off / Lock requests Android to lock the device. Android/OEM policy determines precise lock-screen and physical-panel power-down timing; this is not a direct privileged panel-power command.
 - Screen Off / Lock is available only on Android 9 (API 28)+.
-- No partial wake lock is held. Android may suspend CPU activity according to normal power-management policy after the screen turns off.
-- Background playback is not guaranteed. Android and the media app control playback and may impose their own restrictions.
+- A PARTIAL_WAKE_LOCK is held only after an explicit Screen Off / Lock action. It is released when the screen turns on, the service is interrupted/unbound/destroyed, or the 2-hour timeout expires. Android/OEM power policy can still impose limits.
+- Background playback is not guaranteed. The wake lock only requests CPU uptime; Android, OEM policy, and the media app control playback and may impose their own restrictions. Some banking/payment apps may refuse to run while an Accessibility service is enabled; the user must temporarily disable ScreenOffPlay in Android Accessibility settings. The app does not conceal the service or bypass payment-app security checks.
 - OEM power management can affect service lifetime and playback.
 
 ## Before calling a build a public stable release
