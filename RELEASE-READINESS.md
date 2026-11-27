@@ -72,7 +72,11 @@ WAKE_LOCK is requested only for the bounded CPU wake lock used by the explicit S
 
 The accessibility service sets `canRetrieveWindowContent=false` and does not inspect or collect screen content. Accessibility access is powerful and must be clearly explained.
 
-## Payment-app compatibility\n\nSome financial apps restrict operation when any third-party Accessibility service is enabled, even when that service does not read screen content. This is an app/security-policy decision and cannot be safely overridden by ScreenOffPlay. To use an affected payment app, the user must turn off ScreenOffPlay under Android Settings → Accessibility → Installed/Downloaded apps, then reopen the payment app. If Black Screen overlay is active, restore it with a double-tap before opening the payment app.\n\n## Functional limitations and power behavior
+## Payment-app compatibility
+
+Some financial apps restrict operation when any third-party Accessibility service is enabled, even when that service does not read screen content. This is an app/security-policy decision and cannot be safely overridden by ScreenOffPlay. To use an affected payment app, the user must turn off ScreenOffPlay under Android Settings → Accessibility → Installed/Downloaded apps, then reopen the payment app. If Black Screen overlay is active, restore it with a double-tap before opening the payment app.
+
+## Functional limitations and power behavior
 
 - Black Screen shows black pixels and holds the display awake; it does not lock the device or physically power off the panel.
 - Screen Off / Lock requests Android to lock the device. Android/OEM policy determines precise lock-screen and physical-panel power-down timing; this is not a direct privileged panel-power command.
