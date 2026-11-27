@@ -38,13 +38,15 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
         super.onServiceConnected();
         instance = this;
 
-        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(screenStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(screenStateReceiver, filter);
+        if (!receiverRegistered) {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(screenStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(screenStateReceiver, filter);
+            }
+            receiverRegistered = true;
         }
-        receiverRegistered = true;
     }
 
     @Override
@@ -87,9 +89,12 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
     }
 
     public static boolean isActive(Context context) {
-        return context.getApplicationContext()
+        ScreenLockAccessibilityService service = instance;
+        boolean recordedActive = context.getApplicationContext()
                 .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getBoolean(KEY_ACTIVE, false);
+        return recordedActive && service != null
+                && service.wakeLock != null && service.wakeLock.isHeld();
     }
 
     public static boolean lockDisplayAndKeepSystemRunning(Context context) {
