@@ -33,8 +33,8 @@ public class BlackoutTileService extends TileService {
             return;
         }
 
-        boolean started = ScreenLockAccessibilityService.lockDisplayAndKeepSystemRunning(this);
-        if (!started) {
+        boolean locked = ScreenLockAccessibilityService.lockDisplay(this);
+        if (!locked) {
             openApp();
         }
         updateTileState();

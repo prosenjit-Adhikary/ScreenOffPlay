@@ -2,16 +2,13 @@
 
 A minimal Android screen-lock and media-listening utility with a Quick Settings tile.
 
-## v1.3.0 — Accessibility screen lock with separate system/display control
+## v1.3.0 — Accessibility screen lock
 
-When the user taps the **Screen Off** Quick Settings tile, the app sends two independent Android control requests:
+When the user taps the **Screen Off** Quick Settings tile on Android 9 (API 28) or later, Screen Off Play invokes Android's `AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN` action to request a device lock.
 
-1. **System-running control:** acquires PowerManager.PARTIAL_WAKE_LOCK, keeping the CPU awake while allowing the display to turn off.
-2. **Display/lock control:** invokes AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN to lock the device through Android's supported accessibility action.
+**No PARTIAL_WAKE_LOCK is used.** The app does not force the CPU to remain awake, acquire a CPU wake lock, or override Android's normal Doze/deep-sleep and background power management. This avoids unnecessary battery consumption. Android and the media app decide whether background playback continues; playback is not guaranteed.
 
-The partial wake lock is automatically released when Android reports that the screen turns on, if the accessibility service is interrupted/unbound/destroyed, or after a 30-minute safety timeout. The timeout prevents an abandoned session from holding the CPU awake indefinitely. A partial wake lock can increase battery consumption.
-
-The action locks the device; Android and the device manufacturer control the exact timing of panel power-down and lock-screen behavior. This is not a privileged direct panel-power command and behavior must be validated on physical devices. The new lock mode requires Android 9 (API 28) or later because GLOBAL_ACTION_LOCK_SCREEN is not available on earlier versions.
+The action requests a device lock. Android and the device manufacturer control the exact timing of lock-screen and physical-panel power-down behavior. This is not a privileged direct panel-power command and must be validated on physical devices.
 
 ## Setup and use
 
@@ -20,8 +17,8 @@ The action locks the device; Android and the device manufacturer control the exa
 3. In Android Accessibility settings, enable the Screen Off Play service. The service does not retrieve window content or collect what is displayed.
 4. Add the **Screen Off** tile to Quick Settings.
 5. Start media playback in the app you want to use.
-6. Tap the Screen Off tile. Screen Off Play acquires the bounded system wake lock and requests Android to lock the screen.
-7. Wake and unlock the phone normally. The screen-on event releases the wake lock and ends the active session.
+6. Tap the Screen Off tile. Screen Off Play asks Android to lock the device.
+7. Wake and unlock the phone normally. Android controls CPU sleep and background execution.
 
 If the accessibility service is disabled, the tile opens the app so the permission can be enabled again.
 
@@ -29,18 +26,16 @@ If the accessibility service is disabled, the tile opens the app so the permissi
 
 The previous v1.2.0 overlay remains available from the app's **Start legacy AMOLED blackout** button. It displays a pure-black overlay at minimum window brightness and uses FLAG_KEEP_SCREEN_ON; it does not lock the device or physically power off the display. Double-tap the overlay to restore it. The overlay still requires **Display over other apps** permission.
 
-## Media playback and battery notes
+## Media playback and power management
 
-Android and each media app control background playback. Screen Off Play does not bypass YouTube or another app's background-playback restrictions, and continued playback is not guaranteed.
-
-The partial wake lock intentionally prevents CPU suspend during the active lock session. This can use more battery than allowing the device to enter deep sleep. The 30-minute cap and screen-on release limit this behavior.
+Android and each media app control background playback. Screen Off Play does not bypass YouTube or another app's background-playback restrictions, and continued playback is not guaranteed. Since no wake lock is held, Android may suspend CPU activity according to its normal power-management policy when the screen is off.
 
 ## Permissions and privacy
 
 - BIND_ACCESSIBILITY_SERVICE is enforced by Android for binding the declared accessibility service; the user must explicitly enable it in Settings.
-- WAKE_LOCK allows the app to hold the CPU awake for the bounded session.
 - SYSTEM_ALERT_WINDOW is used only by the optional legacy overlay.
 - The Quick Settings tile is protected by Android's BIND_QUICK_SETTINGS_TILE permission.
+- No WAKE_LOCK permission is requested.
 - The accessibility service declares no window-content retrieval and does not inspect or collect screen content.
 - No Internet, storage, audio-recording, or device-admin permission is requested.
 
@@ -64,14 +59,13 @@ See RELEASE-READINESS.md for the implementation/verification ledger, supported A
 
 ## Development history
 
-### v1.3.0 — Accessibility lock and split control
+### v1.3.0 — Accessibility lock
 
 - Add an AccessibilityService that invokes GLOBAL_ACTION_LOCK_SCREEN.
-- Add a separate bounded PARTIAL_WAKE_LOCK to keep the CPU running while the display is locked.
-- Release the wake lock on screen-on, service interruption/unbinding/destruction, or after 30 minutes.
-- Route the Quick Settings tile through the new lock controller.
+- Do not acquire PARTIAL_WAKE_LOCK; leave CPU sleep and background scheduling to Android.
+- Route the Quick Settings tile through the accessibility lock controller.
 - Preserve v1.2.0 AMOLED blackout as a separately accessible legacy mode.
-- Add setup, privacy, battery, compatibility, and verification documentation.
+- Document setup, privacy, battery, compatibility, and verification requirements.
 
 ### v1.2.0 — Awake AMOLED blackout
 

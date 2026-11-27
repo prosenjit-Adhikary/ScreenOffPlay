@@ -2,9 +2,7 @@
 
 ## Project status
 
-ScreenOffPlay 1.3.0 introduces a split-control lock mode:
-- Display/lock controller: Android AccessibilityService invokes GLOBAL_ACTION_LOCK_SCREEN.
-- System-running controller: PowerManager.PARTIAL_WAKE_LOCK keeps the CPU awake while the display is locked.
+ScreenOffPlay 1.3.0 uses Android AccessibilityService to request a device lock through GLOBAL_ACTION_LOCK_SCREEN. **The app does not acquire PARTIAL_WAKE_LOCK and does not request WAKE_LOCK permission.** Android retains normal control of CPU sleep, Doze, and background execution. This is intentional to avoid unnecessary battery use.
 
 The previous v1.2.0 AMOLED blackout overlay remains available as a separate legacy mode. A successful source change or CI build does not prove physical display behavior, media playback continuity, or OEM compatibility.
 
@@ -25,22 +23,20 @@ The minimum SDK declaration does not mean the new lock mode is supported on API 
 - [x] Add AccessibilityService declaration protected by BIND_ACCESSIBILITY_SERVICE.
 - [x] Configure the service without window-content retrieval.
 - [x] Invoke GLOBAL_ACTION_LOCK_SCREEN from the user-initiated Quick Settings action.
-- [x] Add a separate PARTIAL_WAKE_LOCK for CPU/system-running behavior.
-- [x] Bound the wake lock to 30 minutes and release it on screen-on or service lifecycle shutdown.
+- [x] Remove PARTIAL_WAKE_LOCK acquisition, wake-lock lifecycle code, timeout logic, and WAKE_LOCK manifest permission.
+- [x] Keep CPU power management under Android's normal policy; no claim is made that CPU stays awake after locking.
 - [x] Route the Quick Settings tile through the accessibility lock controller.
 - [x] Add an in-app link to Android Accessibility settings.
 - [x] Preserve the old AMOLED overlay as a separate legacy mode.
-- [x] Update README and changelog with setup, permission, privacy, battery, and compatibility details.
-- [x] GitHub Actions Android Build workflow #36 passed on implementation commit 63547c725e2ec99cbecf9a07c6bdf383c40a30ac: Android lint, unit tests, debug APK, unsigned release APK, artifact uploads, and ephemeral-key signing smoke test all succeeded.
-- [x] GitHub Actions Android Build workflow #37 passed on documentation/current PR head 468a0bf641b7170650b675d735c8e00c20d17d0f: Android lint, unit tests, debug APK, unsigned release APK, artifact uploads, and ephemeral-key signing smoke test all succeeded.
+- [x] Update README and changelog with setup, permission, privacy, power-management, and compatibility details.
+- [x] Previous exact-head CI workflow #38 passed on pre-change commit 418004ae70c72eb3735c6504e08b942297d5ef01. This evidence does not cover the current wake-lock-removal changes.
+- [ ] Run exact-head GitHub Actions after the wake-lock removal and require all checks to pass.
 - [ ] Verify API 28+ lock action and screen-off behavior on physical devices from multiple OEMs.
-- [ ] Verify screen-on wake-lock release and normal unlock flow.
-- [ ] Verify the 30-minute safety timeout.
+- [ ] Verify normal wake/unlock flow and Quick Settings tile state recovery.
 - [ ] Test media playback separately for each target media app; do not assume background playback is allowed.
-- [ ] Verify Quick Settings tile state and recovery after service disable/re-enable.
 - [ ] Verify API 26–27 gracefully use only the legacy overlay and do not claim new lock-mode support.
 
-**Completion status:** Implementation is complete on the feature branch and the automated CI suite passed on implementation commit 63547c725e2ec99cbecf9a07c6bdf383c40a30ac. Exact-head automated CI verification is complete. All physical-device checks remain pending. Do not call v1.3.0 release-ready until exact-head CI and required device tests pass.
+**Completion status:** Wake-lock removal and documentation changes are implemented in source on the feature branch. The new exact-head CI run and all physical-device checks are pending. Do not call v1.3.0 release-ready until exact-head CI and required device tests pass.
 
 ## v1.2.0 implementation and verification history
 
@@ -54,21 +50,21 @@ The minimum SDK declaration does not mean the new lock mode is supported on API 
 ## Permissions and privacy
 
 - BIND_ACCESSIBILITY_SERVICE: Android-enforced service binding permission; the user explicitly enables the service in Settings.
-- WAKE_LOCK: allows the bounded partial CPU wake lock.
 - SYSTEM_ALERT_WINDOW: used only by the optional legacy overlay.
 - BIND_QUICK_SETTINGS_TILE: protects the Quick Settings tile service.
+- WAKE_LOCK: not requested or used.
 
-The accessibility service sets canRetrieveWindowContent=false and does not inspect or collect screen content. It listens for a window-state event only to satisfy service configuration; no event content is stored. Re-audit this behavior and the manifest on every release.
+The accessibility service sets canRetrieveWindowContent=false and does not inspect or collect screen content. Re-audit this behavior and the manifest on every release.
 
 Accessibility access is powerful and must be explained clearly to users. Do not describe it as harmless or request it without explaining that it is used to lock the device.
 
-## Functional limitations and safety
+## Functional limitations and power behavior
 
 - GLOBAL_ACTION_LOCK_SCREEN requests Android to lock the device. Android/OEM policy determines the precise lock-screen and physical-panel power-down timing; this API is not a direct privileged panel power command.
 - The new lock action is available on Android 9 (API 28) and later.
-- The partial wake lock keeps the CPU awake and can increase battery use. It has a 30-minute maximum timeout and is released when the screen turns on or the service stops.
-- A partial wake lock does not guarantee that every media app will continue playback. Android and the media app control background playback and may impose their own restrictions.
-- OEM power management can still affect service lifetime and playback.
+- No partial wake lock is held. Android may suspend CPU activity according to normal power-management policy after the screen turns off.
+- Background playback is not guaranteed. Android and the media app control playback and may impose their own restrictions.
+- OEM power management can affect service lifetime and playback.
 - The legacy black overlay does not physically power off the panel; it only displays black pixels and holds the display awake.
 
 ## Before calling a build a public stable release
@@ -76,7 +72,6 @@ Accessibility access is powerful and must be explained clearly to users. Do not 
 - [ ] Build debug and release variants from the exact tagged commit.
 - [ ] Run Android lint and available automated tests; resolve release-blocking findings.
 - [ ] Verify accessibility enable/disable and lock action behavior on physical devices.
-- [ ] Verify wake-lock release on screen-on, service stop, and timeout.
 - [ ] Test media behavior separately for each supported app and device.
 - [ ] Test legacy overlay permission, double-tap restoration, rotation, and lock/unlock.
 - [ ] Test at least one physical device from each Android/OEM family claimed as supported.
@@ -96,7 +91,7 @@ The repository includes .github/workflows/release.yml. Pushing a version tag mat
 
 ## Compatibility reporting template
 
-For each tested device, record manufacturer/model, Android version, security patch level, app version/commit, Accessibility service enable result, lock action result, panel-off behavior, wake-lock release result, 30-minute timeout result, media behavior, crashes/ANRs, and test date. Do not claim a device family is supported based on testing a different model.
+For each tested device, record manufacturer/model, Android version, security patch level, app version/commit, Accessibility service enable result, lock action result, panel-off behavior, media behavior, crashes/ANRs, and test date. Do not claim a device family is supported based on testing a different model.
 
 ## Open-source licensing
 

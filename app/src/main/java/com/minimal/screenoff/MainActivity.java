@@ -28,15 +28,14 @@ public class MainActivity extends Activity {
 
         TextView info = new TextView(this);
         info.setText(
-                "New Screen Lock mode uses Android Accessibility to lock the device display. " +
-                "A separate partial wake lock keeps the CPU running for up to 30 minutes or until the screen wakes.\n\n" +
+                "Screen Off mode uses Android Accessibility to request a device lock. " +
+                "It does not acquire a CPU wake lock; Android remains responsible for normal power management.\n\n" +
                 "Setup:\n" +
                 "1. Enable Screen Off Play under Android Accessibility settings.\n" +
                 "2. Add the Screen Off tile to Quick Settings.\n" +
                 "3. Start media playback, open Quick Settings and tap Screen Off.\n" +
-                "4. Android locks the screen while the system wake lock is held. Press the power button or use your normal unlock method to wake the phone.\n\n" +
-                "The wake lock is released when the screen turns on, if the accessibility service stops, or after a 30-minute safety timeout. " +
-                "Holding the CPU awake can increase battery use. Android and each media app still control background playback; this app does not bypass playback restrictions.\n\n" +
+                "4. Android receives the lock request. Use your normal method to wake and unlock the phone.\n\n" +
+                "Screen Off Play does not force the CPU to stay awake. Background playback depends on Android, device power settings, and the media app; this app does not bypass playback restrictions.\n\n" +
                 "The older AMOLED black overlay remains available as a separate legacy mode."
         );
         info.setTextSize(15f);

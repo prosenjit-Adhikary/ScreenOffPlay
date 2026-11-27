@@ -3,11 +3,11 @@
 ## 1.3.0
 
 - Add an AccessibilityService using GLOBAL_ACTION_LOCK_SCREEN for device lock.
-- Add a separate PARTIAL_WAKE_LOCK system-running control, bounded to 30 minutes and released when the screen turns on or the service stops.
-- Route the Quick Settings tile through the new split system/display controller.
+- Remove PARTIAL_WAKE_LOCK and the WAKE_LOCK permission; Android retains control of CPU sleep and background power management.
+- Route the Quick Settings tile through the accessibility lock controller.
 - Add an in-app Accessibility setup flow.
 - Preserve the previous AMOLED overlay as an optional legacy mode.
-- Document accessibility scope, privacy, battery impact, Android API requirements, and real-device verification gates.
+- Document accessibility scope, privacy, battery behavior, Android API requirements, and real-device verification gates.
 - Increment the Android version to 1.3.0 (version code 4).
 
 ## 1.2.0

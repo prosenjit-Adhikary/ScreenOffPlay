@@ -6,29 +6,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
-import android.os.PowerManager;
 import android.view.accessibility.AccessibilityEvent;
 
 /**
- * Locks the display through Android's public accessibility global action while
- * holding a bounded partial wake lock so the CPU can continue running.
+ * Requests Android to lock the device through the public accessibility global action.
+ * The service does not hold a wake lock or prevent normal Android power management.
  */
 public class ScreenLockAccessibilityService extends AccessibilityService {
     private static final String PREFS = "screen_lock_state";
     private static final String KEY_ACTIVE = "active";
-    private static final long MAX_WAKE_LOCK_MS = 30L * 60L * 1000L;
 
     private static volatile ScreenLockAccessibilityService instance;
-    private PowerManager.WakeLock wakeLock;
     private boolean receiverRegistered;
 
     private final BroadcastReceiver screenStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
-                releaseSystemWakeLock();
                 setActive(false);
-                instance = ScreenLockAccessibilityService.this;
             }
         }
     };
@@ -56,13 +51,11 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
 
     @Override
     public void onInterrupt() {
-        releaseSystemWakeLock();
         setActive(false);
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        releaseSystemWakeLock();
         setActive(false);
         instance = null;
         return super.onUnbind(intent);
@@ -78,7 +71,6 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
             }
             receiverRegistered = false;
         }
-        releaseSystemWakeLock();
         setActive(false);
         if (instance == this) instance = null;
         super.onDestroy();
@@ -93,48 +85,23 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
         boolean recordedActive = context.getApplicationContext()
                 .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getBoolean(KEY_ACTIVE, false);
-        return recordedActive && service != null
-                && service.wakeLock != null && service.wakeLock.isHeld();
+        return recordedActive && service != null;
     }
 
-    public static boolean lockDisplayAndKeepSystemRunning(Context context) {
+    public static boolean lockDisplay(Context context) {
         ScreenLockAccessibilityService service = instance;
         if (service == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             return false;
         }
 
-        PowerManager powerManager =
-                (PowerManager) service.getSystemService(Context.POWER_SERVICE);
-        if (powerManager == null) return false;
-
         try {
-            if (service.wakeLock == null) {
-                service.wakeLock = powerManager.newWakeLock(
-                        PowerManager.PARTIAL_WAKE_LOCK,
-                        service.getPackageName() + ":ScreenOffSystemRunning"
-                );
-                service.wakeLock.setReferenceCounted(false);
-            }
-            // Safety cap: prevent an abandoned mode from holding the CPU awake forever.
-            service.wakeLock.acquire(MAX_WAKE_LOCK_MS);
-
             boolean locked = service.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
-            if (locked) {
-                service.setActive(true);
-                return true;
-            }
+            service.setActive(locked);
+            return locked;
         } catch (RuntimeException ignored) {
-            // Permission may have been revoked or the system may reject the action.
-        }
-
-        service.releaseSystemWakeLock();
-        service.setActive(false);
-        return false;
-    }
-
-    private void releaseSystemWakeLock() {
-        if (wakeLock != null && wakeLock.isHeld()) {
-            wakeLock.release();
+            // The system may reject the action if accessibility state changed.
+            service.setActive(false);
+            return false;
         }
     }
 
