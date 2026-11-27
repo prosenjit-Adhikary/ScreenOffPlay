@@ -14,7 +14,8 @@ A minimal Android display-mode utility with a Quick Settings tile. Users choose 
 - Uses Android's AccessibilityService global lock-screen action.
 - Available on Android 9 (API 28)+.
 - The user must explicitly enable Screen Off Play in Android Accessibility settings when starting this mode.
-- The service does not retrieve or inspect window content.
+- The service does not subscribe to accessibility events and cannot retrieve or inspect window content.
+- Accessibility is used only for the explicit Android lock-screen action.
 - Android/OEM controls exact screen power-down timing. Background media playback is not guaranteed.
 
 ## Installation and first launch
