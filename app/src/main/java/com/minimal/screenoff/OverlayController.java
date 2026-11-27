@@ -67,10 +67,12 @@ public final class OverlayController {
             return true;
         });
 
-        // Do not keep the panel awake: let Android's normal screen timeout
-        // turn the display off after the AMOLED pixels have been blacked out.
+        // Keep the window visible so Android does not apply the normal screen
+        // timeout and lock the phone while the user is listening to media.
+        // The black overlay and minimum window brightness remain in effect.
         int flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
