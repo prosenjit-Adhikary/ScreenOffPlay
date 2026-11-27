@@ -34,19 +34,19 @@ On API 26–27, Screen Off / Lock is disabled and Black Screen is the only avail
 - [x] Check only the selected mode's access after the user taps Continue; explain why access is needed and open Android Settings only if it is missing.
 - [x] Remove the always-visible buttons for unrelated permission settings.
 - [x] Update README and CHANGELOG with the install-first/permission-later flow.
-- [ ] Verify merged APK permission allowlist contains SYSTEM_ALERT_WINDOW and WAKE_LOCK only; service binding protections remain on their respective services.
+- [x] Exact-head GitHub Actions run #65 passed on `acc75a946e8c3e1dc3b985618a5d64765fa33018`: lint, unit tests, debug/release APK builds, APK permission allowlist (SYSTEM_ALERT_WINDOW + WAKE_LOCK only), accessibility least-privilege guard, artifact uploads, and ephemeral signing smoke test.
 - [x] Earlier baseline GitHub Actions run #54 passed on commit `cd842abf7239a0f278114e79257ff9a82c2a777e`; this predates the current wake-lock changes and does not verify them. The repository currently has no app-specific test source files, so the successful `gradle test` task is not evidence of physical-device behavior or broad automated functional coverage.
 - [x] Earlier run #54 APK manifests were inspected before the current WAKE_LOCK addition; the new APK permission list still requires CI verification.
 - [x] Record run #54 APK SHA-256: debug APK `d74cc1c2a3a6bfd04118bcebc9311c796c664597a5a49430dfed584f955031df`; unsigned release APK `860309cef7219ea09e0b20c801dcde126d7a8c22ea33b56111a8caf7d9c10bb8`. The unsigned release APK is validation-only and must not be installed/distributed as a release package. The debug APK is a development build, not the signed public release.
 - [x] Update the CI guard to allow exactly SYSTEM_ALERT_WINDOW and WAKE_LOCK while continuing to reject accessibility event subscriptions/window-content retrieval; updated workflow still requires a passing CI run.
-- [ ] Execute the updated CI permission allowlist guard on a GitHub Actions run.
+- [x] Updated CI permission allowlist and accessibility configuration guards passed in run #65 on the exact PR head.
 - [ ] Verify clean install has no permission dialog and first launch displays mode selection on physical devices.
 - [ ] Verify Black Screen asks for overlay special access only after Continue, and resumes correctly after granting/denying it.
 - [ ] Verify Screen Off / Lock opens Accessibility settings only after Continue, requires explicit user enablement, and handles returning to the app.
 - [ ] Verify mode changes, saved selection, Quick Settings routing, Android 8 fallback, and no-permission-denied crash on physical devices.
 - [ ] Test media behavior separately for each supported app/device; do not assume background playback is allowed.
 
-**Completion status:** Source and documentation hardening are committed. Source hardening passed exact-head CI run #54, and both generated APK manifests were inspected. A follow-up CI allowlist guard has since been added but still needs an Actions run. Physical-device verification remains pending, and the reported Play Protect warning has not been conclusively resolved. Keep PR #3 in Draft. Do not merge or publish until physical-device verification, final release signing, and the warning investigation are complete.
+**Completion status:** The v1.3.0 wake-lock implementation and documentation are committed. Exact PR-head CI run #65 passed all build, lint, test, APK permission, accessibility configuration, and signing-smoke checks. Debug artifact ID `15223047050` was generated from this exact head; its APK SHA-256 is `5f55f08afcdc297b3945dac2ff6290a85c53080245e3c96617b6d7eb92a418fb`. Physical-device verification remains pending, including real background-audio behavior and payment-app compatibility. The reported Play Protect warning has not been conclusively resolved. Keep PR #3 in Draft; do not merge or publish until physical-device verification, final release signing, and warning investigation are complete.
 
 ## Permissions and privacy audit
 
@@ -56,7 +56,7 @@ On API 26–27, Screen Off / Lock is disabled and Black Screen is the only avail
 - [x] Keep `canRetrieveWindowContent=false`; the service cannot inspect the active window hierarchy.
 - [x] Keep the service limited to `GLOBAL_ACTION_LOCK_SCREEN`; no gestures, screenshots, text extraction, keylogging, or content forwarding are implemented.
 - [x] Reset the persisted tile-active indicator when the service reconnects, preventing stale state after a process/service restart.
-- [x] Build and inspect both APK variants after this change; CI run #54 passed and the merged manifest contains no new requested permissions.
+- [x] CI run #65 rebuilt both APK variants and passed the binary APK permission allowlist: only SYSTEM_ALERT_WINDOW and WAKE_LOCK are requested.
 - [ ] Verify the service still binds and `GLOBAL_ACTION_LOCK_SCREEN` works on physical Android 9+ devices after removing the event subscription.
 
 **Play Protect warning investigation:** The project previously received a user report of an Android financial/identity-theft warning during sideload installation. Google documents that certain warnings can be triggered when sideloaded apps request sensitive capabilities commonly abused for financial fraud, including accessibility-related capabilities. This source-level audit does not prove the warning is a false positive and does not establish malware. Preserve the exact warning screenshot/text, APK SHA-256, signing certificate fingerprint, download source, and Play Protect scan result before deciding whether to appeal. Do not ask users to disable Play Protect or bypass a block. See Google's [Play Protect warning guidance](https://developers.google.com/android/play-protect/warning-dev-guidance).
@@ -88,7 +88,7 @@ Some financial apps restrict operation when any third-party Accessibility servic
 ## Before calling a build a public stable release
 
 - [ ] Run Android lint, Gradle tests, debug/release APK builds, APK permission audit, and signing smoke test on the current PR head.
-- [x] Inspect both merged manifests and confirm no unexpected requested permission was introduced (run #54 debug and unsigned release APKs).
+- [x] Run #65 APK permission audit passed for both debug and unsigned release APKs; exact allowlist is SYSTEM_ALERT_WINDOW and WAKE_LOCK.
 - [ ] Verify clean install, first-launch mode selection, and deferred permission onboarding on physical devices.
 - [ ] Verify both selectable modes and Quick Settings behavior on physical devices.
 - [ ] Verify saved selection survives app restart and can be changed repeatedly.
