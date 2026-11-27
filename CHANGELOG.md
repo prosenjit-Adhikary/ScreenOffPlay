@@ -3,27 +3,28 @@
 ## 1.3.0
 
 - Add a persistent in-app mode selector for Black Screen (AMOLED) and Screen Off / Lock.
-- Save the user's selection and apply it to the Quick Settings tile.
-- Allow users to change the selected mode at any time from the app.
-- Keep Screen Off / Lock available only on Android 9 (API 28)+; Android 8 (API 26–27) offers Black Screen only.
-- Add an AccessibilityService using GLOBAL_ACTION_LOCK_SCREEN for device lock.
-- Remove PARTIAL_WAKE_LOCK and the WAKE_LOCK permission; Android retains control of CPU sleep and background power management.
-- Preserve the AMOLED overlay as a separate selectable mode.
-- Document mode behavior, setup, privacy, compatibility, and real-device verification gates.
-- Increment the Android version to 1.3.0 (version code 4).
+- Save the selected mode and route the Quick Settings tile through it.
+- Defer special-access setup until the user chooses to start the selected mode; do not request it during installation.
+- Explain why the selected mode needs Display over other apps or Accessibility access.
+- Allow users to change modes later; check only the selected mode's access when it is started.
+- Keep Screen Off / Lock available only on Android 9 (API 28)+.
+- Keep Accessibility window-content retrieval disabled.
+- Remove PARTIAL_WAKE_LOCK and WAKE_LOCK permission.
+- Preserve the AMOLED overlay and double-tap restoration.
+- Increment version to 1.3.0 (version code 4).
 
 ## 1.2.0
 
 - Keep the AMOLED blackout overlay visible with FLAG_KEEP_SCREEN_ON.
 - Prevent the normal screen timeout from automatically locking the phone while blackout mode is active.
 - Keep the black overlay at minimum window brightness and preserve double-tap restoration.
-- Update the in-app instructions and documentation to clarify that this mode does not physically power off the display.
-- Clarify that YouTube and other media-app playback restrictions remain controlled by Android and the media app.
-- Increment the Android version to 1.2.0 (version code 3).
+- Clarify that this is black-screen mode, not physical display power-off.
+- Clarify that media-app playback restrictions remain controlled by Android and the media app.
+- Increment version to 1.2.0 (version code 3).
 
 ## 1.1.0
 
 - Add a custom ScreenOffPlay launcher identity with an adaptive icon.
 - Add a monochrome launcher layer for supported themed-icon launchers.
 - Use the app's own icon for its Quick Settings tile.
-- Increment the Android version to 1.1.0 (version code 2).
+- Increment version to 1.1.0 (version code 2).
