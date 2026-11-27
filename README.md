@@ -16,7 +16,7 @@ A minimal Android display-mode utility with a Quick Settings tile. Users choose 
 - The user must explicitly enable Screen Off Play in Android Accessibility settings when starting this mode.
 - The service does not subscribe to accessibility events and cannot retrieve or inspect window content.
 - Accessibility is used only for the explicit Android lock-screen action.
-- Android/OEM controls exact screen power-down timing. Background media playback is not guaranteed.
+- A bounded `PARTIAL_WAKE_LOCK` is acquired for an explicit lock request and released when the screen turns on, the service stops, or the 2-hour safety timeout expires. This helps keep the CPU awake but does not guarantee background playback; Android, OEM power management, and the media app still control playback.\n- Some banking/payment apps may restrict operation while an Accessibility service is enabled. ScreenOffPlay does not hide or bypass those checks; temporarily disable its Accessibility service in Android Settings before using an affected payment app.
 
 ## Installation and first launch
 
@@ -40,7 +40,7 @@ On Android 8 (API 26–27), Screen Off / Lock is unavailable and Black Screen is
 - `SYSTEM_ALERT_WINDOW` is declared only because Android requires it for the optional Display over other apps special-access flow used by Black Screen. It is not an installer-time runtime permission and is not granted automatically.
 - `BIND_ACCESSIBILITY_SERVICE` protects the service binding; the user explicitly enables the service in Android Settings. It is not granted during installation.
 - `BIND_QUICK_SETTINGS_TILE` protects the Quick Settings tile.
-- No Internet, storage, audio-recording, device-admin, or WAKE_LOCK permission is requested.
+- `WAKE_LOCK` is used only for the bounded CPU wake lock after an explicit Screen Off / Lock action.\n- No Internet, storage, audio-recording, or device-admin permission is requested.
 - Accessibility is used only to invoke Android's global lock-screen action; window-content retrieval is disabled.
 
 Accessibility access is powerful. The app explains its purpose and requires the user to enable it explicitly.
