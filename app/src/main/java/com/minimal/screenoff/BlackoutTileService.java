@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
-import android.provider.Settings;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
 
@@ -17,7 +16,7 @@ public class BlackoutTileService extends TileService {
     @Override
     @SuppressLint("StartActivityAndCollapseDeprecated")
     public void onClick() {
-        if (!Settings.canDrawOverlays(this)) {
+        if (!ScreenLockAccessibilityService.isConnected()) {
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -32,14 +31,20 @@ public class BlackoutTileService extends TileService {
             return;
         }
 
-        OverlayController.toggle(this);
+        boolean started = ScreenLockAccessibilityService.lockDisplayAndKeepSystemRunning(this);
+        if (!started) {
+            // Leave the user in control; the app screen explains how to re-enable access.
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivityAndCollapse(intent);
+        }
         updateTileState();
     }
 
     private void updateTileState() {
         Tile tile = getQsTile();
         if (tile != null) {
-            tile.setState(OverlayController.isShowing()
+            tile.setState(ScreenLockAccessibilityService.isActive(this)
                     ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
             tile.updateTile();
         }
