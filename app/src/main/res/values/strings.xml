@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">Locks the screen when you activate Screen Off Play. It does not read or collect screen content.</string>
+</resources>
