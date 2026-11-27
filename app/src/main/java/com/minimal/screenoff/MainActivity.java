@@ -17,6 +17,7 @@ public class MainActivity extends Activity {
     private RadioButton blackScreenOption;
     private RadioButton screenOffOption;
     private TextView status;
+    private Button startButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +44,7 @@ public class MainActivity extends Activity {
         layout.addView(title);
 
         TextView intro = new TextView(this);
-        intro.setText("Choose how Screen Off Play should work. Your choice is saved and used by the Quick Settings tile. You can change it here any time.");
+        intro.setText("Choose the screen behavior you want. No special access is requested during installation. The permission for your selected mode is explained and requested only when you continue.");
         intro.setTextSize(15f);
         intro.setPadding(0, 20, 0, 16);
         layout.addView(intro);
@@ -57,7 +58,7 @@ public class MainActivity extends Activity {
         modes.addView(blackScreenOption);
 
         TextView blackDescription = new TextView(this);
-        blackDescription.setText("Shows a pure-black overlay. The display stays awake; double-tap the overlay to restore it. Requires Display over other apps permission.");
+        blackDescription.setText("Displays a pure-black overlay and keeps the display awake. Double-tap the overlay to restore the screen. Android asks for Display over other apps access only when you start this mode.");
         blackDescription.setTextSize(13f);
         blackDescription.setPadding(36, 0, 0, 12);
         modes.addView(blackDescription);
@@ -68,15 +69,17 @@ public class MainActivity extends Activity {
         modes.addView(screenOffOption);
 
         TextView lockDescription = new TextView(this);
-        lockDescription.setText("Asks Android to lock the device. Available on Android 9 (API 28) and later. Requires enabling Screen Off Play in Accessibility settings. Android controls CPU sleep and media playback.");
+        lockDescription.setText("Asks Android to lock the device. Available on Android 9 (API 28)+. You must explicitly enable the app's Accessibility service in Android Settings when you choose to start this mode. The service does not read screen content.");
         lockDescription.setTextSize(13f);
         lockDescription.setPadding(36, 0, 0, 12);
         modes.addView(lockDescription);
         layout.addView(modes);
 
         modes.setOnCheckedChangeListener((group, checkedId) -> {
-            if (blackScreenOption != null && checkedId == blackScreenOption.getId()) DisplayModeManager.setMode(this, DisplayModeManager.BLACK_SCREEN);
-            if (screenOffOption != null && checkedId == screenOffOption.getId() && DisplayModeManager.isScreenOffSupported()) {
+            if (blackScreenOption != null && checkedId == blackScreenOption.getId()) {
+                DisplayModeManager.setMode(this, DisplayModeManager.BLACK_SCREEN);
+            } else if (screenOffOption != null && checkedId == screenOffOption.getId()
+                    && DisplayModeManager.isScreenOffSupported()) {
                 DisplayModeManager.setMode(this, DisplayModeManager.SCREEN_OFF);
             }
             refreshStatus();
@@ -84,24 +87,13 @@ public class MainActivity extends Activity {
 
         if (!DisplayModeManager.isScreenOffSupported()) {
             screenOffOption.setEnabled(false);
-            lockDescription.setText("Unavailable on this Android version. Android 8 (API 26–27) supports Black Screen mode only.");
+            lockDescription.setText("Unavailable on this Android version. Android 8 (API 26–27) supports Black Screen only.");
         }
 
-        Button applyButton = new Button(this);
-        applyButton.setText("Start selected mode");
-        applyButton.setOnClickListener(v -> startSelectedMode());
-        layout.addView(applyButton);
-
-        Button accessibilityButton = new Button(this);
-        accessibilityButton.setText("Accessibility settings");
-        accessibilityButton.setOnClickListener(v ->
-                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
-        layout.addView(accessibilityButton);
-
-        Button overlayButton = new Button(this);
-        overlayButton.setText("Display over other apps permission");
-        overlayButton.setOnClickListener(v -> openOverlaySettings());
-        layout.addView(overlayButton);
+        startButton = new Button(this);
+        startButton.setText("Continue with selected mode");
+        startButton.setOnClickListener(v -> startSelectedMode());
+        layout.addView(startButton);
 
         status = new TextView(this);
         status.setTextSize(13f);
@@ -118,12 +110,17 @@ public class MainActivity extends Activity {
         String selected = DisplayModeManager.getMode(this);
         if (DisplayModeManager.SCREEN_OFF.equals(selected)) {
             if (!ScreenLockAccessibilityService.isConnected()) {
+                status.setText("To use Screen Off / Lock, enable Screen Off Play in Android Accessibility settings. No accessibility access is enabled automatically.");
                 startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
                 return;
             }
-            ScreenLockAccessibilityService.lockDisplay(this);
+            if (!ScreenLockAccessibilityService.lockDisplay(this)) {
+                status.setText("Android did not accept the lock request. Check that the Accessibility service is still enabled, then try again.");
+            }
         } else if (!Settings.canDrawOverlays(this)) {
+            status.setText("To use Black Screen, allow Screen Off Play to display over other apps. This special access is optional and is used only for the selected Black Screen mode.");
             openOverlaySettings();
+            return;
         } else {
             OverlayController.show(this);
         }
@@ -139,10 +136,22 @@ public class MainActivity extends Activity {
     private void refreshStatus() {
         if (status == null) return;
         String selected = DisplayModeManager.getMode(this);
-        status.setText("Selected mode: " +
-                (DisplayModeManager.SCREEN_OFF.equals(selected) ? "Screen Off / Lock" : "Black Screen (AMOLED)") +
-                "\nThis selection is saved on this device and also controls the Quick Settings tile.");
-        if (blackScreenOption != null) blackScreenOption.setChecked(DisplayModeManager.BLACK_SCREEN.equals(selected));
-        if (screenOffOption != null) screenOffOption.setChecked(DisplayModeManager.SCREEN_OFF.equals(selected));
+        if (DisplayModeManager.SCREEN_OFF.equals(selected)) {
+            status.setText("Selected: Screen Off / Lock\n" +
+                    (ScreenLockAccessibilityService.isConnected()
+                            ? "Accessibility service is enabled. Tap Continue to lock the device."
+                            : "Accessibility access is not enabled. Tap Continue to open Android Settings."));
+        } else {
+            status.setText("Selected: Black Screen (AMOLED)\n" +
+                    (Settings.canDrawOverlays(this)
+                            ? "Display over other apps access is enabled. Tap Continue to show the black screen."
+                            : "Display over other apps access is not enabled. Tap Continue to open Android Settings."));
+        }
+        if (blackScreenOption != null) {
+            blackScreenOption.setChecked(DisplayModeManager.BLACK_SCREEN.equals(selected));
+        }
+        if (screenOffOption != null) {
+            screenOffOption.setChecked(DisplayModeManager.SCREEN_OFF.equals(selected));
+        }
     }
 }
