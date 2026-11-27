@@ -17,25 +17,20 @@ public class BlackoutTileService extends TileService {
     @Override
     @SuppressLint("StartActivityAndCollapseDeprecated")
     public void onClick() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            // GLOBAL_ACTION_LOCK_SCREEN is unavailable before Android 9.
-            if (Settings.canDrawOverlays(this)) {
-                OverlayController.toggle(this);
-                updateTileState();
-            } else {
+        String mode = DisplayModeManager.getMode(this);
+        if (DisplayModeManager.SCREEN_OFF.equals(mode)) {
+            if (!DisplayModeManager.isScreenOffSupported()
+                    || !ScreenLockAccessibilityService.isConnected()) {
                 openApp();
+                return;
             }
-            return;
-        }
-
-        if (!ScreenLockAccessibilityService.isConnected()) {
-            openApp();
-            return;
-        }
-
-        boolean locked = ScreenLockAccessibilityService.lockDisplay(this);
-        if (!locked) {
-            openApp();
+            if (!ScreenLockAccessibilityService.lockDisplay(this)) openApp();
+        } else {
+            if (!Settings.canDrawOverlays(this)) {
+                openApp();
+                return;
+            }
+            OverlayController.toggle(this);
         }
         updateTileState();
     }
@@ -57,12 +52,14 @@ public class BlackoutTileService extends TileService {
 
     private void updateTileState() {
         Tile tile = getQsTile();
-        if (tile != null) {
-            boolean active = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
-                    ? ScreenLockAccessibilityService.isActive(this)
-                    : OverlayController.isShowing();
-            tile.setState(active ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
-            tile.updateTile();
+        if (tile == null) return;
+        boolean active;
+        if (DisplayModeManager.SCREEN_OFF.equals(DisplayModeManager.getMode(this))) {
+            active = ScreenLockAccessibilityService.isActive(this);
+        } else {
+            active = OverlayController.isShowing();
         }
+        tile.setState(active ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
+        tile.updateTile();
     }
 }
