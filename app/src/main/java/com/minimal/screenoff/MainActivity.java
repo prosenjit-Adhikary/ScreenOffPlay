@@ -28,13 +28,13 @@ public class MainActivity extends Activity {
         layout.addView(title);
 
         TextView intro = new TextView(this);
-        intro.setText("Two functions only: lock the screen and temporarily keep the CPU active. Installing SofP does not show a permission prompt. You decide whether to enable its Accessibility service in Android Settings.");
+        intro.setText("First use: tap the button below if you choose to enable SofP. Android Settings will open and you must switch it on yourself. Installation does not ask for or enable special access.");
         intro.setTextSize(15f);
         intro.setPadding(0, 22, 0, 18);
         layout.addView(intro);
 
         TextView privacy = new TextView(this);
-        privacy.setText("Accessibility is used only for Android's Lock Screen action. SofP does not read screen text, inspect app windows, click controls, or block/interfere with payment and banking apps.");
+        privacy.setText("SofP requests zero Accessibility events and cannot retrieve screen content. Accessibility is used only for Android's Lock Screen action. SofP does not inspect, click, block, or interfere with payment and banking apps.");
         privacy.setTextSize(13f);
         privacy.setPadding(0, 0, 0, 20);
         layout.addView(privacy);
@@ -57,7 +57,7 @@ public class MainActivity extends Activity {
 
     private void onMainAction() {
         if (!ScreenLockAccessibilityService.isEnabled(this)) {
-            status.setText("Enable SofP manually in Android Accessibility Settings. Nothing is enabled automatically.");
+            status.setText("Android Accessibility Settings opened. Find SofP and enable it only if you agree.");
             startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
             return;
         }
@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
         } else {
             actionButton.setEnabled(true);
             actionButton.setText("Enable SofP Accessibility");
-            status.setText("Not enabled. No permission was requested during installation.");
+            status.setText("Not enabled. Nothing was enabled or prompted during installation.");
         }
     }
 }
