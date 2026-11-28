@@ -39,26 +39,29 @@ jobs:
         run: gradle assembleDebug
       - name: Build release APK (unsigned validation build)
         run: gradle assembleRelease
-      - name: Enforce least-privilege APK permissions and accessibility configuration
+      - name: Enforce least-privilege APK permissions and Device Admin configuration
         run: |
           set -euo pipefail
-          expected_permissions="$(printf '%s\n' \
-            'android.permission.SYSTEM_ALERT_WINDOW' \
+          expected_permissions="$(printf '%s\\n' \\
+            'android.permission.SYSTEM_ALERT_WINDOW' \\
             'android.permission.WAKE_LOCK' | sort)"
           for apk in app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/release/app-release-unsigned.apk; do
-            actual_permissions="$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump permissions "$apk" | sed -n "s/.*uses-permission: name='\([^']*\)'.*/\1/p" | sort -u)"
+            actual_permissions="$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump permissions "$apk" | sed -n "s/.*uses-permission: name='\\([^']*\\)'.*/\\1/p" | sort -u)"
             if [[ "$actual_permissions" != "$expected_permissions" ]]; then
               echo "::error::Unexpected requested permissions in $apk"
-              printf 'Expected:\n%s\nActual:\n%s\n' "$expected_permissions" "$actual_permissions"
+              printf 'Expected:\\n%s\\nActual:\\n%s\\n' "$expected_permissions" "$actual_permissions"
               exit 1
             fi
           done
-          config="app/src/main/res/xml/accessibility_service_config.xml"
-          grep -Fq 'android:canRetrieveWindowContent="false"' "$config"
-          if grep -Eq 'android:accessibilityEventTypes|android:canRetrieveWindowContent="true"' "$config"; then
-            echo "::error::Accessibility service requests unnecessary events or window-content access"
+          manifest="app/src/main/AndroidManifest.xml"
+          if grep -Eq 'BIND_ACCESSIBILITY_SERVICE|android.accessibilityservice.AccessibilityService|ScreenLockAccessibilityService' "$manifest"; then
+            echo "::error::SofP must not declare or register an Accessibility service"
             exit 1
           fi
+          grep -Fq 'android.permission.BIND_DEVICE_ADMIN' "$manifest"
+          grep -Fq 'android:name=".ScreenLockAdminReceiver"' "$manifest"
+          grep -Fq '<force-lock />' app/src/main/res/xml/device_admin_policies.xml
+          grep -Fq '<string name="app_name">SofP</string>' app/src/main/res/values/strings.xml
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
