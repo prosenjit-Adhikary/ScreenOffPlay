@@ -31,7 +31,7 @@ jobs:
       - run: gradle test
       - run: gradle assembleDebug
       - run: gradle assembleRelease
-      - name: Enforce minimal permissions and zero-event Accessibility policy
+      - name: Enforce minimal permissions and Accessibility privacy policy
         run: |
           set -euo pipefail
           expected_permissions="$(printf 'android.permission.WAKE_LOCK\n' | sort)"
@@ -51,10 +51,9 @@ jobs:
           fi
           grep -Fq 'android:name=".ScreenLockAccessibilityService"' "$manifest"
           grep -Fq 'android.permission.BIND_ACCESSIBILITY_SERVICE' "$manifest"
-          grep -Fq 'android:accessibilityEventTypes="0"' "$accessibility"
           grep -Fq 'android:canRetrieveWindowContent="false"' "$accessibility"
-          if grep -Eq 'android:packageNames=|canRetrieveWindowContent="true"|canRequestTouchExplorationMode="true"|canRequestFilterKeyEvents="true"' "$accessibility"; then
-            echo "::error::Accessibility requests events, window content, or capabilities outside approved scope"
+          if grep -Eq 'android:accessibilityEventTypes=|android:packageNames=|canRetrieveWindowContent="true"|canRequestTouchExplorationMode="true"|canRequestFilterKeyEvents="true"' "$accessibility"; then
+            echo "::error::Accessibility must not subscribe to events, filter packages, retrieve content, or request extra capabilities"
             exit 1
           fi
           if grep -R -Eq 'DeviceAdmin|force-lock|lockNow\(|SYSTEM_ALERT_WINDOW|TYPE_APPLICATION_OVERLAY' app/src/main; then
@@ -62,6 +61,7 @@ jobs:
             exit 1
           fi
           grep -Fq '<string name="app_name">SofP</string>' app/src/main/res/values/strings.xml
+          grep -Fq '<string name="tile_name">SofP</string>' app/src/main/res/values/strings.xml
       - uses: actions/upload-artifact@v4
         with:
           name: SofP-v1.3.0-debug
