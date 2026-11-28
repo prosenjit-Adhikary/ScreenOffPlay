@@ -136,6 +136,16 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle clean lint test assembleRelease
 
+      - name: Run dependency-free Accessibility settings regression tests
+        run: |
+          set -euo pipefail
+          TEST_CLASSES="$RUNNER_TEMP/sofP-unit-tests"
+          mkdir -p "$TEST_CLASSES"
+          javac -d "$TEST_CLASSES" \
+            app/src/main/java/com/minimal/screenoff/AccessibilitySettingsMatcher.java \
+            app/src/test/java/com/minimal/screenoff/AccessibilitySettingsMatcherTest.java
+          java -cp "$TEST_CLASSES" com.minimal.screenoff.AccessibilitySettingsMatcherTest
+
       - name: Verify APK permissions, signature and checksum
         run: |
           set -euo pipefail
