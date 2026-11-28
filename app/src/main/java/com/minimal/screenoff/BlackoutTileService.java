@@ -20,11 +20,11 @@ public class BlackoutTileService extends TileService {
         String mode = DisplayModeManager.getMode(this);
         if (DisplayModeManager.SCREEN_OFF.equals(mode)) {
             if (!DisplayModeManager.isScreenOffSupported()
-                    || !ScreenLockAccessibilityService.isConnected()) {
+                    || !DeviceAdminLockController.isAdminActive(this)) {
                 openApp();
                 return;
             }
-            if (!ScreenLockAccessibilityService.lockDisplay(this)) openApp();
+            if (!DeviceAdminLockController.lockDisplay(this)) openApp();
         } else {
             if (!Settings.canDrawOverlays(this)) {
                 openApp();
@@ -55,7 +55,7 @@ public class BlackoutTileService extends TileService {
         if (tile == null) return;
         boolean active;
         if (DisplayModeManager.SCREEN_OFF.equals(DisplayModeManager.getMode(this))) {
-            active = ScreenLockAccessibilityService.isActive(this);
+            active = DeviceAdminLockController.isActive(this);
         } else {
             active = OverlayController.isShowing();
         }
