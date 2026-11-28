@@ -51,6 +51,9 @@ jobs:
               printf 'Expected:\n%s\nActual:\n%s\n' "$expected_permissions" "$actual_permissions"
               exit 1
             fi
+            badging="$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "$apk")"
+            grep -Fq "package: name='com.minimal.screenoff' versionCode='4' versionName='1.3.0'" <<< "$badging"
+            grep -Fq "application-label:'SofP'" <<< "$badging"
           done
           manifest="app/src/main/AndroidManifest.xml"
           accessibility="app/src/main/res/xml/accessibility_service_config.xml"
@@ -71,6 +74,10 @@ jobs:
           fi
           grep -Fq '<string name="app_name">SofP</string>' app/src/main/res/values/strings.xml
           grep -Fq '<string name="tile_name">SofP</string>' app/src/main/res/values/strings.xml
+      - name: Generate exact APK SHA-256 checksums
+        run: |
+          set -euo pipefail
+          sha256sum app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/release/app-release-unsigned.apk > SofP-v1.3.0-apk-sha256.txt
       - uses: actions/upload-artifact@v4
         with:
           name: SofP-v1.3.0-debug
@@ -80,6 +87,11 @@ jobs:
         with:
           name: SofP-v1.3.0-release-unsigned
           path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SofP-v1.3.0-apk-checksums
+          path: SofP-v1.3.0-apk-sha256.txt
           if-no-files-found: error
       - name: Smoke-test release signing with an ephemeral CI-only key
         env:
