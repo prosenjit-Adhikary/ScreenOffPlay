@@ -15,7 +15,7 @@ public final class DeviceAdminLockController {
     private static final String KEY_ACTIVE = "active";
     private static final long WAKE_LOCK_TIMEOUT_MS = 2L * 60L * 60L * 1000L;
 
-    private static PowerManager.WakeLock wakeLock;
+    private static volatile PowerManager.WakeLock wakeLock;
     private static BroadcastReceiver screenOnReceiver;
 
     private DeviceAdminLockController() {}
@@ -64,7 +64,9 @@ public final class DeviceAdminLockController {
         boolean recorded = context.getApplicationContext()
                 .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getBoolean(KEY_ACTIVE, false);
-        return recorded && isAdminActive(context);
+        PowerManager.WakeLock currentWakeLock = wakeLock;
+        return recorded && currentWakeLock != null && currentWakeLock.isHeld()
+                && isAdminActive(context);
     }
 
     private static void registerScreenOnReceiver(Context app) {
