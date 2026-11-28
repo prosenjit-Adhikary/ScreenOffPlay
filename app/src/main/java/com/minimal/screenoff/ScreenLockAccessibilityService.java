@@ -9,7 +9,6 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.view.accessibility.AccessibilityEvent;
 
 /**
@@ -29,24 +28,8 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
         String enabledServices = Settings.Secure.getString(context.getContentResolver(),
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
         ComponentName expected = new ComponentName(context, ScreenLockAccessibilityService.class);
-        return isServiceEnabled(accessibilityEnabled, enabledServices,
-                expected.flattenToString(), expected.flattenToShortString());
-    }
-
-    static boolean isServiceEnabled(String accessibilityEnabled, String enabledServices,
-            String expectedFullComponent, String expectedShortComponent) {
-        if (!"1".equals(accessibilityEnabled) || enabledServices == null
-                || enabledServices.trim().isEmpty()) {
-            return false;
-        }
-
-        for (String component : enabledServices.split(":")) {
-            if (expectedFullComponent.equalsIgnoreCase(component)
-                    || expectedShortComponent.equalsIgnoreCase(component)) {
-                return true;
-            }
-        }
-        return false;
+        return AccessibilitySettingsMatcher.isServiceEnabled(accessibilityEnabled,
+                enabledServices, expected.flattenToString(), expected.flattenToShortString());
     }
 
     public static boolean lockScreenAndKeepCpuActive() {
