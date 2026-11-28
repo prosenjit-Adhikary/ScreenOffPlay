@@ -31,7 +31,7 @@ jobs:
       - run: gradle test
       - run: gradle assembleDebug
       - run: gradle assembleRelease
-      - name: Enforce minimal permissions and Accessibility privacy policy
+      - name: Enforce minimal permissions and zero-event Accessibility policy
         run: |
           set -euo pipefail
           expected_permissions="$(printf 'android.permission.WAKE_LOCK\n' | sort)"
@@ -44,16 +44,17 @@ jobs:
             fi
           done
           manifest="app/src/main/AndroidManifest.xml"
+          accessibility="app/src/main/res/xml/accessibility_service_config.xml"
           if grep -Eq 'BIND_DEVICE_ADMIN|DeviceAdminReceiver|SYSTEM_ALERT_WINDOW' "$manifest"; then
             echo "::error::Unexpected legacy permission or declaration"
             exit 1
           fi
           grep -Fq 'android:name=".ScreenLockAccessibilityService"' "$manifest"
           grep -Fq 'android.permission.BIND_ACCESSIBILITY_SERVICE' "$manifest"
-          grep -Fq 'android:canRetrieveWindowContent="false"' app/src/main/res/xml/accessibility_service_config.xml
-          grep -Fq 'android:packageNames="com.minimal.screenoff"' app/src/main/res/xml/accessibility_service_config.xml
-          if grep -Eq 'canRetrieveWindowContent="true"|canRequestTouchExplorationMode="true"|canRequestFilterKeyEvents="true"' app/src/main/res/xml/accessibility_service_config.xml; then
-            echo "::error::Accessibility requests capabilities outside approved scope"
+          grep -Fq 'android:accessibilityEventTypes="0"' "$accessibility"
+          grep -Fq 'android:canRetrieveWindowContent="false"' "$accessibility"
+          if grep -Eq 'android:packageNames=|canRetrieveWindowContent="true"|canRequestTouchExplorationMode="true"|canRequestFilterKeyEvents="true"' "$accessibility"; then
+            echo "::error::Accessibility requests events, window content, or capabilities outside approved scope"
             exit 1
           fi
           if grep -R -Eq 'DeviceAdmin|force-lock|lockNow\(|SYSTEM_ALERT_WINDOW|TYPE_APPLICATION_OVERLAY' app/src/main; then
