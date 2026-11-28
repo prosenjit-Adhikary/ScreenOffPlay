@@ -1,6 +1,8 @@
 package com.minimal.screenoff;
 
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,13 +40,13 @@ public class MainActivity extends Activity {
         layout.setPadding(40, 36, 40, 36);
 
         TextView title = new TextView(this);
-        title.setText("Screen Off Play");
+        title.setText("SofP");
         title.setTextSize(24f);
         title.setGravity(Gravity.CENTER);
         layout.addView(title);
 
         TextView intro = new TextView(this);
-        intro.setText("Choose the screen behavior you want. No special access is requested during installation. The permission for your selected mode is explained and requested only when you continue. Some banking and payment apps may restrict access while an Accessibility service or screen overlay is active; this app does not hide or bypass those security checks.");
+        intro.setText("Choose the screen behavior you want. No special access is requested during installation. The permission for your selected mode is explained and requested only when you continue. SofP does not use an Accessibility service. Close the black overlay before opening a banking or payment app; SofP does not bypass app security checks.");
         intro.setTextSize(15f);
         intro.setPadding(0, 20, 0, 16);
         layout.addView(intro);
@@ -69,7 +71,7 @@ public class MainActivity extends Activity {
         modes.addView(screenOffOption);
 
         TextView lockDescription = new TextView(this);
-        lockDescription.setText("Asks Android to lock the device and temporarily keeps the CPU awake for up to 2 hours. Available on Android 9 (API 28)+. You must explicitly enable the app's Accessibility service in Android Settings when you choose to start this mode. Some banking/payment apps may refuse to run while this service is enabled; temporarily turn it off in Android Accessibility settings to use those apps. The service does not read screen content.");
+        lockDescription.setText("Asks Android to lock the device and temporarily keeps the CPU awake for up to 2 hours. Available on Android 9 (API 28)+. You must explicitly approve SofP as a Device Admin when you choose to start this mode. SofP uses only Android's force-lock policy and does not enable Accessibility access.");
         lockDescription.setTextSize(13f);
         lockDescription.setPadding(36, 0, 0, 12);
         modes.addView(lockDescription);
@@ -109,13 +111,18 @@ public class MainActivity extends Activity {
     private void startSelectedMode() {
         String selected = DisplayModeManager.getMode(this);
         if (DisplayModeManager.SCREEN_OFF.equals(selected)) {
-            if (!ScreenLockAccessibilityService.isConnected()) {
-                status.setText("To use Screen Off / Lock, enable Screen Off Play in Android Accessibility settings. No accessibility access is enabled automatically.");
-                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+            if (!DeviceAdminLockController.isAdminActive(this)) {
+                status.setText("To use Screen Off / Lock, approve SofP as a Device Admin. This is requested only for the lock feature.");
+                Intent adminIntent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                adminIntent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                        new ComponentName(this, ScreenLockAdminReceiver.class));
+                adminIntent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                        "SofP uses the force-lock capability only when you explicitly tap Screen Off / Lock.");
+                startActivity(adminIntent);
                 return;
             }
-            if (!ScreenLockAccessibilityService.lockDisplay(this)) {
-                status.setText("Android did not accept the lock request. Check that the Accessibility service is still enabled, then try again.");
+            if (!DeviceAdminLockController.lockDisplay(this)) {
+                status.setText("Android did not accept the lock request. Check that SofP is still an active Device Admin, then try again.");
             }
         } else if (!Settings.canDrawOverlays(this)) {
             status.setText("To use Black Screen, allow Screen Off Play to display over other apps. This special access is optional and is used only for the selected Black Screen mode.");
@@ -138,9 +145,9 @@ public class MainActivity extends Activity {
         String selected = DisplayModeManager.getMode(this);
         if (DisplayModeManager.SCREEN_OFF.equals(selected)) {
             status.setText("Selected: Screen Off / Lock\n" +
-                    (ScreenLockAccessibilityService.isConnected()
-                            ? "Accessibility service is enabled. Tap Continue to lock the device."
-                            : "Accessibility access is not enabled. Tap Continue to open Android Settings."));
+                    (DeviceAdminLockController.isAdminActive(this)
+                            ? "SofP Device Admin is active. Tap Continue to lock the device."
+                            : "Device Admin approval is not enabled. Tap Continue to review Android's confirmation."));
         } else {
             status.setText("Selected: Black Screen (AMOLED)\n" +
                     (Settings.canDrawOverlays(this)
