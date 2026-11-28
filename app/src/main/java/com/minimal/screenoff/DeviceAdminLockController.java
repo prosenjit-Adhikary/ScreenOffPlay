@@ -17,7 +17,6 @@ public final class DeviceAdminLockController {
 
     private static PowerManager.WakeLock wakeLock;
     private static BroadcastReceiver screenOnReceiver;
-    private static Context appContext;
 
     private DeviceAdminLockController() {}
 
@@ -70,7 +69,6 @@ public final class DeviceAdminLockController {
 
     private static void registerScreenOnReceiver(Context app) {
         if (screenOnReceiver != null) return;
-        appContext = app;
         screenOnReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
