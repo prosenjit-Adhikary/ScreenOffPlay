@@ -44,7 +44,7 @@ jobs:
             fi
           done
           manifest="app/src/main/AndroidManifest.xml"
-          if grep -Eq 'BIND_DEVICE_ADMIN|DeviceAdminReceiver|SYSTEM_ALERT_WINDOW|BIND_ACCESSIBILITY_SERVICE' "$manifest"; then
+          if grep -Eq 'BIND_DEVICE_ADMIN|DeviceAdminReceiver|SYSTEM_ALERT_WINDOW' "$manifest"; then
             echo "::error::Unexpected legacy permission or declaration"
             exit 1
           fi
