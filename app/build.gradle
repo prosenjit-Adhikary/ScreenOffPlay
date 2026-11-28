@@ -50,5 +50,6 @@ android {
 }
 
 dependencies {
-    // Intentionally empty: 0 KB external library overhead
+    // Test-only dependency; no external libraries are packaged in the app.
+    testImplementation 'junit:junit:4.13.2'
 }
