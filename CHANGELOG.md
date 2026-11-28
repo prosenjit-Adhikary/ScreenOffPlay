@@ -2,9 +2,11 @@
 
 ## 1.3.0
 - Replace Device Admin with a user-enabled Accessibility service for Android's global Lock Screen action.
-- Use Accessibility only for the lock action; do not retrieve window content or inspect app UI.
-- Acquire a bounded two-hour PARTIAL_WAKE_LOCK for explicit lock requests; release on screen-on, service shutdown, or timeout.
-- Do not request runtime/special access during installation; user manually enables Accessibility in Android Settings.
+- Request zero Accessibility events and disable window-content retrieval; use Accessibility only for the explicit lock action.
+- Show first-run instructions; open Android Accessibility Settings only after the user taps the opt-in button.
+- Do not show a permission dialog during installation or enable special access automatically.
+- Use the normal WAKE_LOCK permission for a bounded two-hour PARTIAL_WAKE_LOCK; Android auto-grants this permission without a runtime prompt.
+- Release the wake lock on screen-on, service shutdown, or timeout.
 - Remove Device Admin, overlay mode, and overlay permission.
 - Keep payment/banking apps launchable; add no blocking, interception, hiding, or payment-specific logic.
 - Keep app label SofP and version 1.3.0 (version code 4).
