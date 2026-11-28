@@ -50,6 +50,4 @@ android {
 }
 
 dependencies {
-    // Test-only dependency; no external libraries are packaged in the app.
-    testImplementation 'junit:junit:4.13.2'
 }
