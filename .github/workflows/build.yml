@@ -51,6 +51,7 @@ jobs:
           grep -Fq 'android:name=".ScreenLockAccessibilityService"' "$manifest"
           grep -Fq 'android.permission.BIND_ACCESSIBILITY_SERVICE' "$manifest"
           grep -Fq 'android:canRetrieveWindowContent="false"' app/src/main/res/xml/accessibility_service_config.xml
+          grep -Fq 'android:packageNames="com.minimal.screenoff"' app/src/main/res/xml/accessibility_service_config.xml
           if grep -Eq 'canRetrieveWindowContent="true"|canRequestTouchExplorationMode="true"|canRequestFilterKeyEvents="true"' app/src/main/res/xml/accessibility_service_config.xml; then
             echo "::error::Accessibility requests capabilities outside approved scope"
             exit 1
