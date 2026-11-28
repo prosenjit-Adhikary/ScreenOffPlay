@@ -2,21 +2,16 @@
 
 ## 1.3.0
 
-- Remove the unused window-state accessibility event subscription; the lock service requests no accessibility events and cannot retrieve window content.
-- Reset stale lock-tile state when the accessibility service reconnects.
-- Keep accessibility limited to the explicit Android lock-screen global action.
-
 - Add a persistent in-app mode selector for Black Screen (AMOLED) and Screen Off / Lock.
 - Save the selected mode and route the Quick Settings tile through it.
-- Defer special-access setup until the user chooses to start the selected mode; do not request it during installation.
-- Explain why the selected mode needs Display over other apps or Accessibility access.
-- Allow users to change modes later; check only the selected mode's access when it is started.
+- Replace the Accessibility lock service with Android Device Admin's force-lock-only policy.
+- Do not register an Accessibility service or request accessibility-event/window-content access.
+- Request Device Admin approval only after the user selects Screen Off / Lock and taps Continue.
+- Rename the Android system/launcher app label and in-app heading to **SofP**.
 - Keep Screen Off / Lock available only on Android 9 (API 28)+.
-- Keep Accessibility window-content retrieval disabled.
-- Add `WAKE_LOCK` and a bounded `PARTIAL_WAKE_LOCK` for explicit Screen Off / Lock actions; release it on screen-on, service teardown, or after a 2-hour safety timeout.
-- Document payment-app compatibility limitations of enabled Accessibility services; do not attempt to bypass app security checks.
+- Add a bounded `PARTIAL_WAKE_LOCK` for explicit Screen Off / Lock actions; release it on screen-on or after a 2-hour safety timeout.
 - Preserve the AMOLED overlay and double-tap restoration.
-- Increment version to 1.3.0 (version code 4).
+- Keep version at 1.3.0 (version code 4).
 
 ## 1.2.0
 
