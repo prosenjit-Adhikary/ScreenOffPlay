@@ -24,22 +24,25 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
     private BroadcastReceiver screenOnReceiver;
 
     public static boolean isEnabled(Context context) {
-        if (!"1".equals(Settings.Secure.getString(context.getContentResolver(),
-                Settings.Secure.ACCESSIBILITY_ENABLED))) {
+        String accessibilityEnabled = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ACCESSIBILITY_ENABLED);
+        String enabledServices = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        ComponentName expected = new ComponentName(context, ScreenLockAccessibilityService.class);
+        return isServiceEnabled(accessibilityEnabled, enabledServices,
+                expected.flattenToString(), expected.flattenToShortString());
+    }
+
+    static boolean isServiceEnabled(String accessibilityEnabled, String enabledServices,
+            String expectedFullComponent, String expectedShortComponent) {
+        if (!"1".equals(accessibilityEnabled) || enabledServices == null
+                || enabledServices.trim().isEmpty()) {
             return false;
         }
 
-        String enabledServices = Settings.Secure.getString(context.getContentResolver(),
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-        if (TextUtils.isEmpty(enabledServices)) return false;
-
-        ComponentName expected = new ComponentName(context, ScreenLockAccessibilityService.class);
-        TextUtils.SimpleStringSplitter splitter = new TextUtils.SimpleStringSplitter(':');
-        splitter.setString(enabledServices);
-        while (splitter.hasNext()) {
-            String component = splitter.next();
-            if (expected.flattenToString().equalsIgnoreCase(component)
-                    || expected.flattenToShortString().equalsIgnoreCase(component)) {
+        for (String component : enabledServices.split(":")) {
+            if (expectedFullComponent.equalsIgnoreCase(component)
+                    || expectedShortComponent.equalsIgnoreCase(component)) {
                 return true;
             }
         }
