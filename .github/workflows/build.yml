@@ -29,6 +29,15 @@ jobs:
           gradle-version: '8.2'
       - run: gradle lint
       - run: gradle test
+      - name: Run dependency-free Accessibility settings regression tests
+        run: |
+          set -euo pipefail
+          TEST_CLASSES="$RUNNER_TEMP/sofP-unit-tests"
+          mkdir -p "$TEST_CLASSES"
+          javac -d "$TEST_CLASSES" \
+            app/src/main/java/com/minimal/screenoff/AccessibilitySettingsMatcher.java \
+            app/src/test/java/com/minimal/screenoff/AccessibilitySettingsMatcherTest.java
+          java -cp "$TEST_CLASSES" com.minimal.screenoff.AccessibilitySettingsMatcherTest
       - run: gradle assembleDebug
       - run: gradle assembleRelease
       - name: Enforce minimal permissions and Accessibility privacy policy
