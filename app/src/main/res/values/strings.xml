@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SofP</string>
+    <string name="accessibility_service_name">SofP Screen Lock</string>
+    <string name="accessibility_service_description">Requests no Accessibility events and cannot retrieve screen content. Uses Accessibility only for the Android global Lock Screen action.</string>
+    <string name="tile_name">SofP</string>
+</resources>

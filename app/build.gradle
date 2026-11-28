@@ -17,8 +17,8 @@ android {
         applicationId "com.minimal.screenoff"
         minSdk 26
         targetSdk 34
-        versionCode 3
-        versionName "1.2.0"
+        versionCode 4
+        versionName "1.3.0"
     }
 
     if (hasReleaseSigning) {
@@ -50,5 +50,4 @@ android {
 }
 
 dependencies {
-    // Intentionally empty: 0 KB external library overhead
 }

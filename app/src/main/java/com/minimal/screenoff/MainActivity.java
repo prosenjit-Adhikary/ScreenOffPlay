@@ -2,64 +2,90 @@ package com.minimal.screenoff;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    private TextView status;
+    private Button actionButton;
 
+    @Override protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setGravity(Gravity.CENTER);
-        layout.setPadding(48, 48, 48, 48);
+        layout.setGravity(Gravity.CENTER_HORIZONTAL);
+        layout.setPadding(40, 36, 40, 36);
 
         TextView title = new TextView(this);
-        title.setText("Screen Off Play");
-        title.setTextSize(22f);
+        title.setText("SofP");
+        title.setTextSize(25f);
         title.setGravity(Gravity.CENTER);
         layout.addView(title);
 
-        TextView info = new TextView(this);
-        info.setText(
-                "AMOLED Blackout keeps a pure black (#000000) overlay visible at minimum window brightness. " +
-                "The overlay keeps the display awake to prevent the normal screen timeout from locking the phone.\n\n" +
-                "1. Allow Display over other apps.\n" +
-                "2. Add the Screen Off tile to Quick Settings.\n" +
-                "3. Start media playback, then tap the tile.\n" +
-                "4. The screen stays black and the phone does not auto-lock from screen timeout.\n" +
-                "5. Double-tap the black screen to restore it. The power button can still lock the phone manually.\n\n" +
-                "This is a black-screen mode, not a physical display power-off. The display remains powered. " +
-                "Media playback is still controlled by Android and the media app; this app cannot bypass YouTube or other apps' playback restrictions."
-        );
-        info.setTextSize(15f);
-        info.setGravity(Gravity.CENTER);
-        info.setPadding(0, 24, 0, 24);
-        layout.addView(info);
+        TextView intro = new TextView(this);
+        intro.setText("First use: tap the button below if you choose to enable SofP. Android Settings will open and you must switch it on yourself. Installation does not ask for or enable special access.");
+        intro.setTextSize(15f);
+        intro.setPadding(0, 22, 0, 18);
+        layout.addView(intro);
 
-        Button btn = new Button(this);
-        btn.setText("Allow overlay permission");
-        btn.setOnClickListener(v -> {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName())
-                );
-                startActivity(intent);
-            } else {
-                Toast.makeText(this,
-                        "Add the Screen Off tile to Quick Settings, then use it over your media app.",
-                        Toast.LENGTH_LONG).show();
-            }
-        });
-        layout.addView(btn);
+        TextView privacy = new TextView(this);
+        privacy.setText("SofP requests zero Accessibility events and cannot retrieve screen content. Accessibility is used only for Android's Lock Screen action. SofP does not inspect, click, block, or interfere with payment and banking apps.");
+        privacy.setTextSize(13f);
+        privacy.setPadding(0, 0, 0, 20);
+        layout.addView(privacy);
+
+        actionButton = new Button(this);
+        actionButton.setOnClickListener(v -> onMainAction());
+        layout.addView(actionButton);
+        status = new TextView(this);
+        status.setTextSize(13f);
+        status.setPadding(0, 20, 0, 0);
+        layout.addView(status);
         setContentView(layout);
+        refreshStatus();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        refreshStatus();
+    }
+
+    private void onMainAction() {
+        if (!ScreenLockAccessibilityService.isEnabled(this)) {
+            status.setText("Android Accessibility Settings opened. Find SofP and enable it only if you agree.");
+            startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+            return;
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            status.setText("Screen lock requires Android 9 (API 28) or newer.");
+            return;
+        }
+        boolean success = ScreenLockAccessibilityService.lockScreenAndKeepCpuActive();
+        status.setText(success
+                ? "Screen lock requested. CPU wake lock remains active until screen-on or the 2-hour safety timeout."
+                : "Accessibility service is enabled but not connected. Reopen Settings and try again.");
+    }
+
+    private void refreshStatus() {
+        if (status == null || actionButton == null) return;
+        boolean enabled = ScreenLockAccessibilityService.isEnabled(this);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            actionButton.setEnabled(false);
+            actionButton.setText("Android 9+ required");
+            status.setText("This screen-lock action requires Android 9 (API 28)+.");
+        } else if (enabled) {
+            actionButton.setEnabled(true);
+            actionButton.setText("Screen Off + Keep CPU Active");
+            status.setText("Accessibility is enabled by your choice. Tap to lock the screen.");
+        } else {
+            actionButton.setEnabled(true);
+            actionButton.setText("Enable SofP Accessibility");
+            status.setText("Not enabled. Nothing was enabled or prompted during installation.");
+        }
     }
 }
