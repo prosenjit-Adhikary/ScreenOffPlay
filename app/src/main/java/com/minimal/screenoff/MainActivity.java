@@ -125,7 +125,7 @@ public class MainActivity extends Activity {
                 status.setText("Android did not accept the lock request. Check that SofP is still an active Device Admin, then try again.");
             }
         } else if (!Settings.canDrawOverlays(this)) {
-            status.setText("To use Black Screen, allow Screen Off Play to display over other apps. This special access is optional and is used only for the selected Black Screen mode.");
+            status.setText("To use Black Screen, allow SofP to display over other apps. This special access is optional and is used only for the selected Black Screen mode.");
             openOverlaySettings();
             return;
         } else {
