@@ -124,7 +124,7 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
         super.onDestroy();
     }
 
-    private void unregisterScreenOnReceiver() {
+    private synchronized void unregisterScreenOnReceiver() {
         BroadcastReceiver receiver = screenOnReceiver;
         if (receiver == null) return;
         screenOnReceiver = null;
