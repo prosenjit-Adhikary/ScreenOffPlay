@@ -29,14 +29,14 @@ Installation does not request special access. The user chooses a mode first; onl
 - [x] Keep WAKE_LOCK bounded to 2 hours and release on ACTION_SCREEN_ON.
 - [x] Rename the Android system/launcher label and in-app title to SofP.
 - [x] Update README and changelog.
-- [x] Exact-head GitHub Actions run #77 passed on `d8e35eee0c7b9173080846487485e1ca8a8fe033`: Android lint, Gradle test task, debug/release APK builds, APK permission allowlist, Device Admin policy guard, artifact uploads, and ephemeral signing smoke test. This does not replace physical-device tests.
+- [x] Exact-head GitHub Actions run #78 passed on `90da75a618ac3c53430014b5cc96fa2c1df4a5b4`: Android lint, Gradle test task, debug/release APK builds, APK permission allowlist, Device Admin policy guard, artifact uploads, and ephemeral signing smoke test. This does not replace physical-device tests.
 - [ ] Verify Device Admin activation, lock action, wake-lock release, and tile behavior on physical Android 9+ devices.
 - [ ] Verify clean install and deferred overlay permission on physical devices.
 - [ ] Test payment apps (UPI and banking) with SofP installed and with the overlay closed. SofP has no Accessibility service; app-specific security policy and Device Admin detection still require physical testing.
 - [ ] Test media behavior separately for each supported app/device; background playback is not guaranteed.
 - [ ] Investigate any Play Protect warning using the exact warning text, APK hash, signing certificate, and scan result. Never ask users to disable Play Protect or bypass a warning.
 
-**Verification status:** Current Device Admin implementation CI run #77 passed on commit `d8e35eee0c7b9173080846487485e1ca8a8fe033`. Debug and unsigned release APK artifacts were generated. Physical-device verification remains pending, including payment-app compatibility, Device Admin activation/lock behavior, wake-lock release, overlay restoration, and media behavior. Keep PR #3 in Draft; do not merge or publish until physical-device checks and release signing are complete.
+**Verification status:** Current Device Admin implementation CI run #78 passed on commit `90da75a618ac3c53430014b5cc96fa2c1df4a5b4`. Debug and unsigned release APK artifacts were generated. Physical-device verification remains pending, including payment-app compatibility, Device Admin activation/lock behavior, wake-lock release, overlay restoration, and media behavior. Keep PR #3 in Draft; do not merge or publish until physical-device checks and release signing are complete.
 
 ## Permissions and privacy
 
